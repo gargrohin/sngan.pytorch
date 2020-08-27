@@ -3,12 +3,12 @@
 # @Author  : Xinyu Gong (xy_gong@tamu.edu)
 # @Link    : None
 # @Version : 0.0
-import comet_ml
-comet_ml.config.save(api_key="CX4nLhknze90b8yiN2WMZs9Vw")
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
+import comet_ml
+comet_ml.config.save(api_key="CX4nLhknze90b8yiN2WMZs9Vw")
 
 import cfg
 import models
