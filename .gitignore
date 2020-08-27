@@ -2,5 +2,5 @@
 *.png
 /data/*
 /fid_stat/*
-/log/*
+/logs/*
 */__pycache__/*
