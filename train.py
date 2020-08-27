@@ -3,6 +3,8 @@
 # @Author  : Xinyu Gong (xy_gong@tamu.edu)
 # @Link    : None
 # @Version : 0.0
+import comet_ml
+comet_ml.config.save(api_key="CX4nLhknze90b8yiN2WMZs9Vw")
 
 from __future__ import absolute_import
 from __future__ import division
@@ -23,6 +25,8 @@ import torch.nn as nn
 from tensorboardX import SummaryWriter
 from tqdm import tqdm
 from copy import deepcopy
+
+import torchvision.utils as vutils
 
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
@@ -126,17 +130,38 @@ def main():
         'valid_global_steps': start_epoch // args.val_freq,
     }
 
+    experiment = comet_ml.Experiment(project_name="cifar10_sngan_nosn1")
+    exp_parameters = {
+        "data": "cifar10_32x32",
+        "model": "SNgan_hinge",
+        "opt_gen": "Adam_lr_0.0002, (0.0,0.999)",
+        "opt_dis": "Adam_lr_0.0002, (0.0,0.999)",
+        "z_dim": 128,
+        "n_critic": 5,
+        "normalize": "mean,std 0.5",
+        "dis_landscape": 0,
+        "try": 0,
+        "model_save": args.path_helper['log_path']
+    }
+    output = '.temp_sn0.png'
+
     # train loop
     lr_schedulers = (gen_scheduler, dis_scheduler) if args.lr_decay else None
     for epoch in tqdm(range(int(start_epoch), int(args.max_epoch)), desc='total progress'):
         train(args, gen_net, dis_net, gen_optimizer, dis_optimizer, gen_avg_param, train_loader, epoch, writer_dict,
-              lr_schedulers)
+              lr_schedulers, experiment)       
 
         if epoch and epoch % args.val_freq == 0 or epoch == int(args.max_epoch)-1:
             backup_param = copy_params(gen_net)
             load_params(gen_net, gen_avg_param)
-            inception_score, fid_score = validate(args, fixed_z, fid_stat, gen_net, writer_dict)
+            inception_score, fid_score, sample_imgs = validate(args, fixed_z, fid_stat, gen_net, writer_dict)
             logger.info(f'Inception score: {inception_score}, FID score: {fid_score} || @ epoch {epoch}.')
+            
+            vutils.save_image(sample_imgs, output ,normalize=True)
+            experiment.log_image(output, name = "output_" + str(epoch))
+            experiment.log_metric("IS", inception_score)
+            experiment.log_metric("FID", fid_score)
+
             load_params(gen_net, backup_param)
             if fid_score < best_fid:
                 best_fid = fid_score

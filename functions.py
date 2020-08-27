@@ -4,6 +4,7 @@
 # @Link    : None
 # @Version : 0.0
 
+import comet_ml
 import os
 import numpy as np
 import torch
@@ -22,13 +23,16 @@ logger = logging.getLogger(__name__)
 
 
 def train(args, gen_net: nn.Module, dis_net: nn.Module, gen_optimizer, dis_optimizer, gen_avg_param, train_loader, epoch,
-          writer_dict, schedulers=None):
+          writer_dict, schedulers=None, experiment=None):
     writer = writer_dict['writer']
     gen_step = 0
 
     # train mode
     gen_net = gen_net.train()
     dis_net = dis_net.train()
+
+    d_loss = 0.0
+    g_loss = 0.0
 
     for iter_idx, (imgs, _) in enumerate(tqdm(train_loader)):
         global_steps = writer_dict['train_global_steps']
@@ -93,6 +97,9 @@ def train(args, gen_net: nn.Module, dis_net: nn.Module, gen_optimizer, dis_optim
             tqdm.write(
                 "[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]" %
                 (epoch, args.max_epoch, iter_idx % len(train_loader), len(train_loader), d_loss.item(), g_loss.item()))
+            if experiment != None:
+                experiment.log_metric("gen_loss", g_loss.item())
+                experiment.log_metric("dis_loss", d_loss.item())
 
         writer_dict['train_global_steps'] = global_steps + 1
 
@@ -141,7 +148,7 @@ def validate(args, fixed_z, fid_stat, gen_net: nn.Module, writer_dict):
 
     writer_dict['valid_global_steps'] = global_steps + 1
 
-    return mean, fid_score
+    return mean, fid_score, sample_imgs
 
 
 class LinearLrDecay(object):
