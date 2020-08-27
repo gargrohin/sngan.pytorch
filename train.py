@@ -91,7 +91,7 @@ def main():
         args.max_epoch = np.ceil(args.max_iter * args.n_critic / len(train_loader))
 
     # initial
-    fixed_z = torch.cuda.FloatTensor(np.random.normal(0, 1, (25, args.latent_dim)))
+    fixed_z = torch.cuda.FloatTensor(np.random.normal(0, 1, (64, args.latent_dim)))
     gen_avg_param = copy_params(gen_net)
     start_epoch = 0
     best_fid = 1e4

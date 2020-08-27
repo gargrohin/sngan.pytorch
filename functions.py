@@ -113,7 +113,7 @@ def validate(args, fixed_z, fid_stat, gen_net: nn.Module, writer_dict):
 
     # generate images
     sample_imgs = gen_net(fixed_z)
-    img_grid = make_grid(sample_imgs, nrow=5, normalize=True, scale_each=True)
+    img_grid = make_grid(sample_imgs, nrow=8, normalize=True, scale_each=True)
 
     # get fid and inception score
     fid_buffer_dir = os.path.join(args.path_helper['sample_path'], 'fid_buffer')
