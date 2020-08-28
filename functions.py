@@ -10,6 +10,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torchvision.utils import make_grid
+import torch.nn.functional as F
 from imageio import imsave
 from tqdm import tqdm
 from copy import deepcopy
@@ -21,6 +22,87 @@ from utils.fid_score import calculate_fid_given_paths
 
 logger = logging.getLogger(__name__)
 
+def train_chainer(args, gen_net: nn.Module, dis_net: nn.Module, gen_optimizer, dis_optimizer, gen_avg_param, train_loader, epoch,
+          writer_dict, schedulers=None, experiment=None):
+    writer = writer_dict['writer']
+    gen_step = 0
+
+    # train mode
+    gen_net = gen_net.train()
+    dis_net = dis_net.train()
+
+    d_loss = 0.0
+    g_loss = 0.0
+
+    for iter_idx, (imgs, _) in enumerate(tqdm(train_loader)):
+        global_steps = writer_dict['train_global_steps']
+
+        # Adversarial ground truths
+        real_imgs = imgs.type(torch.cuda.FloatTensor)
+
+        # Sample noise as generator input
+        z = torch.cuda.FloatTensor(np.random.normal(0, 1, (imgs.shape[0], args.latent_dim)))
+
+        # ---------------------
+        #  Train Discriminator
+        # ---------------------
+        dis_optimizer.zero_grad()
+
+        real_validity = dis_net(real_imgs)
+        fake_imgs = gen_net(z).detach()
+        assert fake_imgs.size() == real_imgs.size()
+
+        fake_validity = dis_net(fake_imgs)
+
+        # cal loss
+        d_loss = torch.mean(F.softplus(-real_validity)) + \
+                 torch.mean(F.softplus(fake_validity))
+        d_loss.backward()
+        dis_optimizer.step()
+
+        writer.add_scalar('d_loss', d_loss.item(), global_steps)
+
+        # -----------------
+        #  Train Generator
+        # -----------------
+        if global_steps % args.n_critic == 0:
+            gen_optimizer.zero_grad()
+
+            gen_z = torch.cuda.FloatTensor(np.random.normal(0, 1, (args.gen_batch_size, args.latent_dim)))
+            gen_imgs = gen_net(gen_z)
+            fake_validity = dis_net(gen_imgs)
+
+            # cal loss
+            g_loss = torch.mean(F.softplus(-fake_validity))
+            g_loss.backward()
+            gen_optimizer.step()
+
+            # adjust learning rate
+            if schedulers:
+                print("schedulars?")
+                gen_scheduler, dis_scheduler = schedulers
+                g_lr = gen_scheduler.step(global_steps)
+                d_lr = dis_scheduler.step(global_steps)
+                writer.add_scalar('LR/g_lr', g_lr, global_steps)
+                writer.add_scalar('LR/d_lr', d_lr, global_steps)
+
+            # moving average weight
+            # for p, avg_p in zip(gen_net.parameters(), gen_avg_param):
+            #     avg_p.mul_(0.999).add_(0.001, p.data)
+
+            writer.add_scalar('g_loss', g_loss.item(), global_steps)
+            gen_step += 1
+
+        # verbose
+        if gen_step and iter_idx % args.print_freq == 0:
+            tqdm.write(
+                "[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]" %
+                (epoch, args.max_epoch, iter_idx % len(train_loader), len(train_loader), d_loss.item(), g_loss.item()))
+            if experiment != None:
+                experiment.log_metric("gen_loss", g_loss.item())
+                experiment.log_metric("dis_loss", d_loss.item())
+
+        writer_dict['train_global_steps'] = global_steps + 1
 
 def train(args, gen_net: nn.Module, dis_net: nn.Module, gen_optimizer, dis_optimizer, gen_avg_param, train_loader, epoch,
           writer_dict, schedulers=None, experiment=None):

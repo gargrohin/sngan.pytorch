@@ -13,7 +13,7 @@ comet_ml.config.save(api_key="CX4nLhknze90b8yiN2WMZs9Vw")
 import cfg
 import models
 import datasets
-from functions import train, validate, LinearLrDecay, load_params, copy_params
+from functions import train, validate, LinearLrDecay, load_params, copy_params, train_chainer
 from utils.utils import set_log_dir, save_checkpoint, create_logger
 from utils.inception_score import _init_inception
 from utils.fid_score import create_inception_graph, check_or_download_inception
@@ -148,7 +148,7 @@ def main():
     # train loop
     lr_schedulers = (gen_scheduler, dis_scheduler) if args.lr_decay else None
     for epoch in tqdm(range(int(start_epoch), int(args.max_epoch)), desc='total progress'):
-        train(args, gen_net, dis_net, gen_optimizer, dis_optimizer, gen_avg_param, train_loader, epoch, writer_dict,
+        train_chainer(args, gen_net, dis_net, gen_optimizer, dis_optimizer, gen_avg_param, train_loader, epoch, writer_dict,
               lr_schedulers, experiment)       
 
         if epoch and epoch % args.val_freq == 0 or epoch == int(args.max_epoch)-1:
