@@ -7,7 +7,7 @@ python train.py \
 --dataset cifar10 \
 --img_size 32 \
 --max_iter 50000 \
---model sngan_cifar10 \
+--model chainer_cifar10 \
 --latent_dim 128 \
 --gf_dim 256 \
 --df_dim 128 \
@@ -20,4 +20,4 @@ python train.py \
 --init_type xavier_uniform \
 --n_critic 5 \
 --val_freq 20 \
---exp_name sngan_cifar10
+--exp_name chainer_cifar10
