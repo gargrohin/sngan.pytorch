@@ -130,10 +130,10 @@ def main():
         'valid_global_steps': start_epoch // args.val_freq,
     }
 
-    experiment = comet_ml.Experiment(project_name="cifar10_sngan_nosn1")
+    experiment = comet_ml.Experiment(project_name="cifar10_chainer")
     exp_parameters = {
         "data": "cifar10_32x32",
-        "model": "SNgan_hinge",
+        "model": "dcgan_chainer",
         "opt_gen": "Adam_lr_0.0002, (0.0,0.999)",
         "opt_dis": "Adam_lr_0.0002, (0.0,0.999)",
         "z_dim": 128,
@@ -143,7 +143,7 @@ def main():
         "try": 0,
         "model_save": args.path_helper['log_path']
     }
-    output = '.temp_sn0.png'
+    output = '.temp_ch.png'
 
     # train loop
     lr_schedulers = (gen_scheduler, dis_scheduler) if args.lr_decay else None
