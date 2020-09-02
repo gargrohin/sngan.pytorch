@@ -19,8 +19,126 @@ import logging
 from utils.inception_score import get_inception_score
 from utils.fid_score import calculate_fid_given_paths
 
+class Log_loss(torch.nn.Module):
+    def __init__(self):
+        # negation is true when you minimize -log(val)
+        super(Log_loss, self).__init__()
+       
+    def forward(self, x, negation=True):
+        # shape of x will be [batch size]
+        log_val = torch.log(x)
+        loss = torch.sum(log_val)
+        if negation:
+            loss = torch.neg(loss)
+        return loss
+    
+class Itself_loss(torch.nn.Module):
+    def __init__(self):
+        super(Itself_loss, self).__init__()
+        
+    def forward(self, x, negation=True):
+        # shape of x will be [batch size]
+        loss = torch.sum(x)
+        if negation:
+            loss = torch.neg(loss)
+        return loss
+
 
 logger = logging.getLogger(__name__)
+
+def train_d2(args, gen_net: nn.Module, dis_net1: nn.Module, dis_net2: nn.Module, gen_optimizer, dis_optimizer1, dis_optimizer2, gen_avg_param, train_loader, epoch,
+          writer_dict, schedulers=None, experiment=None):
+    writer = writer_dict['writer']
+    gen_step = 0
+
+    criterion_log = Log_loss()
+    criterion_itself = Itself_loss()
+
+    # train mode
+    gen_net = gen_net.train()
+    dis_net = dis_net.train()
+
+    d_loss = 0.0
+    g_loss = 0.0
+
+    for iter_idx, (imgs, _) in enumerate(tqdm(train_loader)):
+        global_steps = writer_dict['train_global_steps']
+
+        # Adversarial ground truths
+        real_imgs = imgs.type(torch.cuda.FloatTensor)
+
+        # Sample noise as generator input
+        z = torch.cuda.FloatTensor(np.random.normal(0, 1, (imgs.shape[0], args.latent_dim)))
+
+        # ---------------------
+        #  Train Discriminator
+        # ---------------------
+        dis_optimizer1.zero_grad()
+        dis_optimizer2.zero_grad()
+
+        real_validity1 = dis_net1(real_imgs)
+        real_validity2 = dis_net2(real_imgs)
+        fake_imgs = gen_net(z).detach()
+        assert fake_imgs.size() == real_imgs.size()
+
+        fake_validity1 = dis_net1(fake_imgs.detach())
+        fake_validity2 = dis_net2(fake_imgs.detach())
+
+        d_loss1 = 0.2 * criterion_log(real_validity1) + criterion_itself(fake_validity1, False)
+        d_loss1.backward()
+
+        d_loss2 = criterion_itself(real_validity2, False) + 0.1*criterion_log(fake_validity2, False)
+        d_loss2.backward()
+
+        dis_optimizer1.step()
+        dis_optimizer2.step()
+
+        writer.add_scalar('d_loss1', d_loss1.item(), global_steps)
+        writer.add_scalar('d_loss2', d_loss2.item(), global_steps)
+
+        # -----------------
+        #  Train Generator
+        # -----------------
+        if global_steps % args.n_critic == 0:
+            gen_optimizer.zero_grad()
+
+            gen_z = torch.cuda.FloatTensor(np.random.normal(0, 1, (args.gen_batch_size, args.latent_dim)))
+            gen_imgs = gen_net(gen_z)
+            fake_validity1 = dis_net1(gen_imgs)
+            fake_validity2 = dis_net2(gen_imgs)
+
+            # cal loss
+            g_loss = criterion_itself(fake_validity1) + 0.1*criterion_log(fake_validity2)
+            g_loss.backward()
+            gen_optimizer.step()
+
+            # adjust learning rate
+            # if schedulers:
+            #     gen_scheduler, dis_scheduler = schedulers
+            #     g_lr = gen_scheduler.step(global_steps)
+            #     d_lr = dis_scheduler.step(global_steps)
+            #     writer.add_scalar('LR/g_lr', g_lr, global_steps)
+            #     writer.add_scalar('LR/d_lr', d_lr, global_steps)
+
+            # moving average weight
+            for p, avg_p in zip(gen_net.parameters(), gen_avg_param):
+                avg_p.mul_(0.999).add_(0.001, p.data)
+
+            writer.add_scalar('g_loss', g_loss.item(), global_steps)
+            gen_step += 1
+
+        # verbose
+        if gen_step and iter_idx % args.print_freq == 0:
+            tqdm.write(
+                "[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]" %
+                (epoch, args.max_epoch, iter_idx % len(train_loader), len(train_loader), d_loss.item(), g_loss.item()))
+            if experiment != None:
+                experiment.log_metric("gen_loss", g_loss.item())
+                experiment.log_metric("dis_loss1", d_loss1.item())
+                experiment.log_metric("dis_loss2", d_loss2.item())
+
+        writer_dict['train_global_steps'] = global_steps + 1
+
 
 def train_chainer(args, gen_net: nn.Module, dis_net: nn.Module, gen_optimizer, dis_optimizer, gen_avg_param, train_loader, epoch,
           writer_dict, schedulers=None, experiment=None):

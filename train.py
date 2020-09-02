@@ -13,7 +13,7 @@ comet_ml.config.save(api_key="CX4nLhknze90b8yiN2WMZs9Vw")
 import cfg
 import models
 import datasets
-from functions import train, validate, LinearLrDecay, load_params, copy_params, train_chainer
+from functions import train_d2, validate, LinearLrDecay, load_params, copy_params
 from utils.utils import set_log_dir, save_checkpoint, create_logger
 from utils.inception_score import _init_inception
 from utils.fid_score import create_inception_graph, check_or_download_inception
@@ -43,7 +43,8 @@ def main():
 
     # import network
     gen_net = eval('models.'+args.model+'.Generator')(args=args).cuda()
-    dis_net = eval('models.'+args.model+'.Discriminator')(args=args).cuda()
+    dis_net1 = eval('models.'+args.model+'.Discriminator')(args=args).cuda()
+    dis_net2 = eval('models.'+args.model+'.Discriminator')(args=args).cuda()
 
     # weight init
     def weights_init(m):
@@ -62,15 +63,19 @@ def main():
             nn.init.constant_(m.bias.data, 0.0)
 
     gen_net.apply(weights_init)
-    dis_net.apply(weights_init)
+    dis_net1.apply(weights_init)
+    dis_net2.apply(weights_init)
 
     # set optimizer
     gen_optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, gen_net.parameters()),
                                      args.g_lr, (args.beta1, args.beta2))
-    dis_optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, dis_net.parameters()),
+    dis_optimizer1 = torch.optim.Adam(filter(lambda p: p.requires_grad, dis_net1.parameters()),
                                      args.d_lr, (args.beta1, args.beta2))
+    dis_optimizer2 = torch.optim.Adam(filter(lambda p: p.requires_grad, dis_net2.parameters()),
+                                     args.d_lr, (args.beta1, args.beta2))                              
     gen_scheduler = LinearLrDecay(gen_optimizer, args.g_lr, 0.0, 0, args.max_iter * args.n_critic)
-    dis_scheduler = LinearLrDecay(dis_optimizer, args.d_lr, 0.0, 0, args.max_iter * args.n_critic)
+    dis_scheduler1 = LinearLrDecay(dis_optimizer1, args.d_lr, 0.0, 0, args.max_iter * args.n_critic)
+    dis_scheduler2 = LinearLrDecay(dis_optimizer2, args.d_lr, 0.0, 0, args.max_iter * args.n_critic)
 
     # set up data_loader
     dataset = datasets.ImageDataset(args)
@@ -106,9 +111,9 @@ def main():
         start_epoch = checkpoint['epoch']
         best_fid = checkpoint['best_fid']
         gen_net.load_state_dict(checkpoint['gen_state_dict'])
-        dis_net.load_state_dict(checkpoint['dis_state_dict'])
+        dis_net1.load_state_dict(checkpoint['dis_state_dict'])
         gen_optimizer.load_state_dict(checkpoint['gen_optimizer'])
-        dis_optimizer.load_state_dict(checkpoint['dis_optimizer'])
+        dis_optimizer1.load_state_dict(checkpoint['dis_optimizer'])
         avg_gen_net = deepcopy(gen_net)
         avg_gen_net.load_state_dict(checkpoint['avg_gen_state_dict'])
         gen_avg_param = copy_params(avg_gen_net)
@@ -130,25 +135,26 @@ def main():
         'valid_global_steps': start_epoch // args.val_freq,
     }
 
-    experiment = comet_ml.Experiment(project_name="cifar10_chainer")
+    experiment = comet_ml.Experiment(project_name="d2gan_chiar19_resnet")
     exp_parameters = {
         "data": "cifar10_32x32",
-        "model": "dcgan_chainer",
+        "model": "d2gan_resnet",
         "opt_gen": "Adam_lr_0.0002, (0.0,0.999)",
         "opt_dis": "Adam_lr_0.0002, (0.0,0.999)",
         "z_dim": 128,
-        "n_critic": 5,
+        "n_critic": 1,
         "normalize": "mean,std 0.5",
         "dis_landscape": 0,
         "try": 0,
         "model_save": args.path_helper['log_path']
     }
-    output = '.temp_ch.png'
+    output = '.temp_d2.png'
 
     # train loop
-    lr_schedulers = (gen_scheduler, dis_scheduler) if args.lr_decay else None
+    lr_schedulers = (gen_scheduler, dis_scheduler1) if args.lr_decay else None
+    print("args.lr_decay: ", args.lr_decay)
     for epoch in tqdm(range(int(start_epoch), int(args.max_epoch)), desc='total progress'):
-        train_chainer(args, gen_net, dis_net, gen_optimizer, dis_optimizer, gen_avg_param, train_loader, epoch, writer_dict,
+        train_d2(args, gen_net, dis_net1, dis_net2, gen_optimizer, dis_optimizer1, dis_optimizer2, gen_avg_param, train_loader, epoch, writer_dict,
               lr_schedulers, experiment)       
 
         if epoch and epoch % args.val_freq == 0 or epoch == int(args.max_epoch)-1:
@@ -177,10 +183,11 @@ def main():
             'epoch': epoch + 1,
             'model': args.model,
             'gen_state_dict': gen_net.state_dict(),
-            'dis_state_dict': dis_net.state_dict(),
+            'dis1_state_dict': dis_net1.state_dict(),
+            'dis2_state_dict': dis_net2.state_dict(),
             'avg_gen_state_dict': avg_gen_net.state_dict(),
             'gen_optimizer': gen_optimizer.state_dict(),
-            'dis_optimizer': dis_optimizer.state_dict(),
+            'dis_optimizer': dis_optimizer1.state_dict(),
             'best_fid': best_fid,
             'path_helper': args.path_helper
         }, is_best, args.path_helper['ckpt_path'])
