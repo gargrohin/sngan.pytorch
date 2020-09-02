@@ -56,9 +56,11 @@ def train_d2(args, gen_net: nn.Module, dis_net1: nn.Module, dis_net2: nn.Module,
 
     # train mode
     gen_net = gen_net.train()
-    dis_net = dis_net.train()
+    dis_net1 = dis_net1.train()
+    dis_net2 = dis_net2.train()
 
-    d_loss = 0.0
+    d_loss1 = 0.0
+    d_loss2 = 0.0
     g_loss = 0.0
 
     for iter_idx, (imgs, _) in enumerate(tqdm(train_loader)):
