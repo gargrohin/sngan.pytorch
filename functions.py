@@ -133,7 +133,7 @@ def train_d2(args, gen_net: nn.Module, dis_net1: nn.Module, dis_net2: nn.Module,
         if gen_step and iter_idx % args.print_freq == 0:
             tqdm.write(
                 "[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]" %
-                (epoch, args.max_epoch, iter_idx % len(train_loader), len(train_loader), d_loss.item(), g_loss.item()))
+                (epoch, args.max_epoch, iter_idx % len(train_loader), len(train_loader), d_loss1.item(), g_loss.item()))
             if experiment != None:
                 experiment.log_metric("gen_loss", g_loss.item())
                 experiment.log_metric("dis_loss1", d_loss1.item())
