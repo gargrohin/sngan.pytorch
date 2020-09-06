@@ -243,7 +243,7 @@ def train(args, gen_net: nn.Module, dis_net: nn.Module, gen_optimizer, dis_optim
 
         # Adversarial ground truths
         real_imgs = imgs.type(torch.cuda.FloatTensor)
-        y_real = torch.cuda.FloatTensor(torch.ones(real_imgs.size()[0], 1))
+        y_real = torch.cuda.FloatTensor(torch.ones(imgs.shape[0], 1))
 
         # Sample noise as generator input
         z = torch.cuda.FloatTensor(np.random.normal(0, 1, (imgs.shape[0], args.latent_dim)))
