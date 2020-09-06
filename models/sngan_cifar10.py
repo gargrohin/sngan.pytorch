@@ -130,6 +130,6 @@ class Discriminator(nn.Module):
         h = self.activation(h)
         # Global average pooling
         h = h.sum(2).sum(2)
-        output = self.l5(h)
+        output = nn.Sigmoid(self.l5(h))
 
         return output
