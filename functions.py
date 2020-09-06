@@ -229,6 +229,8 @@ def train(args, gen_net: nn.Module, dis_net: nn.Module, gen_optimizer, dis_optim
     writer = writer_dict['writer']
     gen_step = 0
 
+    criterion = nn.BCELoss() 
+
     # train mode
     gen_net = gen_net.train()
     dis_net = dis_net.train()
@@ -241,9 +243,11 @@ def train(args, gen_net: nn.Module, dis_net: nn.Module, gen_optimizer, dis_optim
 
         # Adversarial ground truths
         real_imgs = imgs.type(torch.cuda.FloatTensor)
+        y_real = torch.cuda.FloatTensor(torch.ones(real_imgs.size()[0], 1))
 
         # Sample noise as generator input
         z = torch.cuda.FloatTensor(np.random.normal(0, 1, (imgs.shape[0], args.latent_dim)))
+        y_fake = torch.cuda.FloatTensor(torch.zeros(real_imgs.size()[0], 1))
 
         # ---------------------
         #  Train Discriminator
@@ -257,8 +261,9 @@ def train(args, gen_net: nn.Module, dis_net: nn.Module, gen_optimizer, dis_optim
         fake_validity = dis_net(fake_imgs)
 
         # cal loss
-        d_loss = torch.mean(nn.ReLU(inplace=True)(1.0 - real_validity)) + \
-                 torch.mean(nn.ReLU(inplace=True)(1 + fake_validity))
+        # d_loss = torch.mean(nn.ReLU(inplace=True)(1.0 - real_validity)) + \
+        #          torch.mean(nn.ReLU(inplace=True)(1 + fake_validity))
+        d_loss = criterion(real_validity, y_real) + criterion(fake_validity, y_fake)
         d_loss.backward()
         dis_optimizer.step()
 
@@ -273,9 +278,10 @@ def train(args, gen_net: nn.Module, dis_net: nn.Module, gen_optimizer, dis_optim
             gen_z = torch.cuda.FloatTensor(np.random.normal(0, 1, (args.gen_batch_size, args.latent_dim)))
             gen_imgs = gen_net(gen_z)
             fake_validity = dis_net(gen_imgs)
+            y_fake = torch.cuda.FloatTensor(torch.zeros(args.gen_batch_size, 1))
 
             # cal loss
-            g_loss = -torch.mean(fake_validity)
+            g_loss = criterion(fake_validity, y_fake)
             g_loss.backward()
             gen_optimizer.step()
 

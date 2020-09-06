@@ -20,4 +20,4 @@ python train.py \
 --init_type xavier_uniform \
 --n_critic 1 \
 --val_freq 20 \
---exp_name d2gan_cifar10
+--exp_name jsloss_cifar10

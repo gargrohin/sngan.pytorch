@@ -13,7 +13,7 @@ comet_ml.config.save(api_key="CX4nLhknze90b8yiN2WMZs9Vw")
 import cfg
 import models
 import datasets
-from functions import train_d2, validate, LinearLrDecay, load_params, copy_params
+from functions import train, validate, LinearLrDecay, load_params, copy_params
 from utils.utils import set_log_dir, save_checkpoint, create_logger
 from utils.inception_score import _init_inception
 from utils.fid_score import create_inception_graph, check_or_download_inception
@@ -135,10 +135,10 @@ def main():
         'valid_global_steps': start_epoch // args.val_freq,
     }
 
-    experiment = comet_ml.Experiment(project_name="d2gan_chiar19_resnet")
+    experiment = comet_ml.Experiment(project_name="jsdiv_resnet")
     exp_parameters = {
         "data": "cifar10_32x32",
-        "model": "d2gan_resnet",
+        "model": "jsloss_resnet",
         "opt_gen": "Adam_lr_0.0002, (0.0,0.999)",
         "opt_dis": "Adam_lr_0.0002, (0.0,0.999)",
         "z_dim": 128,
@@ -148,13 +148,13 @@ def main():
         "try": 0,
         "model_save": args.path_helper['log_path']
     }
-    output = '.temp_d2.png'
+    output = '.temp_js.png'
 
     # train loop
     lr_schedulers = (gen_scheduler, dis_scheduler1) if args.lr_decay else None
     print("args.lr_decay: ", args.lr_decay)
     for epoch in tqdm(range(int(start_epoch), int(args.max_epoch)), desc='total progress'):
-        train_d2(args, gen_net, dis_net1, dis_net2, gen_optimizer, dis_optimizer1, dis_optimizer2, gen_avg_param, train_loader, epoch, writer_dict,
+        train(args, gen_net, dis_net1, gen_optimizer, dis_optimizer1, gen_avg_param, train_loader, epoch, writer_dict,
               lr_schedulers, experiment)       
 
         if epoch and epoch % args.val_freq == 0 or epoch == int(args.max_epoch)-1:
