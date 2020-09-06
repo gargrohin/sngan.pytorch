@@ -243,11 +243,11 @@ def train(args, gen_net: nn.Module, dis_net: nn.Module, gen_optimizer, dis_optim
 
         # Adversarial ground truths
         real_imgs = imgs.type(torch.cuda.FloatTensor)
-        y_real = torch.cuda.FloatTensor(torch.ones(imgs.shape[0], 1))
+        y_real = torch.ones(imgs.shape[0], 1).cuda()
 
         # Sample noise as generator input
         z = torch.cuda.FloatTensor(np.random.normal(0, 1, (imgs.shape[0], args.latent_dim)))
-        y_fake = torch.cuda.FloatTensor(torch.zeros(real_imgs.size()[0], 1))
+        y_fake = torch.zeros(real_imgs.size()[0], 1).cuda()
 
         # ---------------------
         #  Train Discriminator
@@ -278,7 +278,7 @@ def train(args, gen_net: nn.Module, dis_net: nn.Module, gen_optimizer, dis_optim
             gen_z = torch.cuda.FloatTensor(np.random.normal(0, 1, (args.gen_batch_size, args.latent_dim)))
             gen_imgs = gen_net(gen_z)
             fake_validity = dis_net(gen_imgs)
-            y_fake = torch.cuda.FloatTensor(torch.zeros(args.gen_batch_size, 1))
+            y_fake = torch.zeros(args.gen_batch_size, 1).cuda()
 
             # cal loss
             g_loss = criterion(fake_validity, y_fake)
