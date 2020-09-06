@@ -18,6 +18,6 @@ python train.py \
 --beta1 0.0 \
 --beta2 0.9 \
 --init_type xavier_uniform \
---n_critic 1 \
+--n_critic 5 \
 --val_freq 20 \
 --exp_name jsloss_cifar10

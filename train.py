@@ -62,9 +62,9 @@ def main():
             nn.init.normal_(m.weight.data, 1.0, 0.02)
             nn.init.constant_(m.bias.data, 0.0)
 
-    # gen_net.apply(weights_init)
-    # dis_net1.apply(weights_init)
-    # dis_net2.apply(weights_init)
+    gen_net.apply(weights_init)
+    dis_net1.apply(weights_init)
+    dis_net2.apply(weights_init)
 
     # set optimizer
     gen_optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, gen_net.parameters()),
@@ -140,7 +140,7 @@ def main():
         "data": "cifar10_32x32",
         "model": "jsloss_resnet",
         "opt_gen": "Adam_lr_0.0002, (0.0,0.999)",
-        "opt_dis": "Adam_lr_0.0002, (0.0,0.999)",
+        "opt_dis": "Adam_lr_0.00005, (0.0,0.999)",
         "z_dim": 128,
         "n_critic": 1,
         "normalize": "mean,std 0.5",
