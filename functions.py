@@ -224,7 +224,7 @@ def train_chainer(args, gen_net: nn.Module, dis_net: nn.Module, gen_optimizer, d
 
         writer_dict['train_global_steps'] = global_steps + 1
 
-def train_multi(args, gen_net: nn.Module, dis_net1: nn.Module, dis_net2: nn.Module, gen_optimizer, dis_optimizer1, dis_optimizer2, gen_avg_param, train_loader, epoch,
+def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen_avg_param, train_loader, epoch,
           writer_dict, schedulers=None, experiment=None):
     writer = writer_dict['writer']
     gen_step = 0
@@ -233,12 +233,12 @@ def train_multi(args, gen_net: nn.Module, dis_net1: nn.Module, dis_net2: nn.Modu
 
     # train mode
     gen_net = gen_net.train()
-    dis_net1 = dis_net1.train()
-    dis_net1 = dis_net2.train()
-    multiD = [dis_net1, dis_net2]
-    multiD_opt = [dis_optimizer1, dis_optimizer2]
+    # dis_net1 = dis_net1.train()
+    # dis_net1 = dis_net2.train()
+    # multiD = [dis_net1, dis_net2]
+    # multiD_opt = [dis_optimizer1, dis_optimizer2]
 
-    n_dis = 2
+    n_dis = len(multiD)
 
     d_loss = 0.0
     g_loss = 0.0
@@ -288,7 +288,7 @@ def train_multi(args, gen_net: nn.Module, dis_net1: nn.Module, dis_net2: nn.Modu
 
         for i in range(mask.size()[0]):
             random_checker = np.random.randint(0,10)
-            if random_checker > 100:  #100 for no random thingie
+            if random_checker > 7:  #100 for no random thingie
                 index = np.random.randint(0,n_dis)
                 mask[i][index] = 1.0
             else:

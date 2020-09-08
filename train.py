@@ -44,7 +44,7 @@ def main():
     # import network
     gen_net = eval('models.'+args.model+'.Generator')(args=args).cuda()
     dis_net1 = eval('models.'+args.model+'.Discriminator')(args=args).cuda()
-    dis_net2 = eval('models.'+args.model+'.Discriminator')(args=args).cuda()
+    # dis_net2 = eval('models.'+args.model+'.Discriminator')(args=args).cuda()
 
     # weight init
     def weights_init(m):
@@ -64,18 +64,28 @@ def main():
 
     gen_net.apply(weights_init)
     dis_net1.apply(weights_init)
-    dis_net2.apply(weights_init)
+    # dis_net2.apply(weights_init)
+
+    multiD = []
+    multiD_opt = []
+    for i in range(4):
+        dis_net = eval('models.'+args.model+'.Discriminator')(args=args).cuda()
+        dis_net.apply(weights_init)
+        opt = torch.optim.Adam(filter(lambda p: p.requires_grad, dis_net.parameters()),
+                                args.d_lr, (args.beta1, args.beta2))
+        multiD.append(dis_net)
+        multiD_opt.append(opt)
 
     # set optimizer
     gen_optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, gen_net.parameters()),
                                      args.g_lr, (args.beta1, args.beta2))
     dis_optimizer1 = torch.optim.Adam(filter(lambda p: p.requires_grad, dis_net1.parameters()),
                                      args.d_lr, (args.beta1, args.beta2))
-    dis_optimizer2 = torch.optim.Adam(filter(lambda p: p.requires_grad, dis_net2.parameters()),
-                                     args.d_lr, (args.beta1, args.beta2))                              
-    gen_scheduler = LinearLrDecay(gen_optimizer, args.g_lr, 0.0, 0, args.max_iter * args.n_critic)
-    dis_scheduler1 = LinearLrDecay(dis_optimizer1, args.d_lr, 0.0, 0, args.max_iter * args.n_critic)
-    dis_scheduler2 = LinearLrDecay(dis_optimizer2, args.d_lr, 0.0, 0, args.max_iter * args.n_critic)
+    # dis_optimizer2 = torch.optim.Adam(filter(lambda p: p.requires_grad, dis_net2.parameters()),
+    #                                  args.d_lr, (args.beta1, args.beta2))                              
+    # gen_scheduler = LinearLrDecay(gen_optimizer, args.g_lr, 0.0, 0, args.max_iter * args.n_critic)
+    # dis_scheduler1 = LinearLrDecay(dis_optimizer1, args.d_lr, 0.0, 0, args.max_iter * args.n_critic)
+    # dis_scheduler2 = LinearLrDecay(dis_optimizer2, args.d_lr, 0.0, 0, args.max_iter * args.n_critic)
 
     # set up data_loader
     dataset = datasets.ImageDataset(args)
@@ -135,13 +145,13 @@ def main():
         'valid_global_steps': start_epoch // args.val_freq,
     }
 
-    experiment = comet_ml.Experiment(project_name="jsdiv_resnet")
+    experiment = comet_ml.Experiment(project_name="multiD_resnet")
     exp_parameters = {
         "data": "cifar10_32x32",
         "model": "multiD_resnet",
         "opt_gen": "Adam_lr_0.0002, (0.0,0.999)",
         "opt_dis": "Adam_lr_0.0002, (0.0,0.999)",
-        "n_dis": 2,
+        "n_dis": 4,
         "z_dim": 128,
         "n_critic": 5,
         "normalize": "mean,std 0.5",
@@ -152,10 +162,10 @@ def main():
     output = '.temp_multi.png'
 
     # train loop
-    lr_schedulers = (gen_scheduler, dis_scheduler1) if args.lr_decay else None
+    lr_schedulers = None#(gen_scheduler, dis_scheduler1) if args.lr_decay else None
     print("args.lr_decay: ", args.lr_decay)
     for epoch in tqdm(range(int(start_epoch), int(args.max_epoch)), desc='total progress'):
-        train_multi(args, gen_net, dis_net1, dis_net2, gen_optimizer, dis_optimizer1, dis_optimizer2, gen_avg_param, train_loader, epoch, writer_dict,
+        train_multi(args, gen_net, multiD, gen_optimizer, multiD_opt, gen_avg_param, train_loader, epoch, writer_dict,
               lr_schedulers, experiment)       
 
         if epoch and epoch % args.val_freq == 0 or epoch == int(args.max_epoch)-1:
@@ -185,7 +195,6 @@ def main():
             'model': args.model,
             'gen_state_dict': gen_net.state_dict(),
             'dis1_state_dict': dis_net1.state_dict(),
-            'dis2_state_dict': dis_net2.state_dict(),
             'avg_gen_state_dict': avg_gen_net.state_dict(),
             'gen_optimizer': gen_optimizer.state_dict(),
             'dis_optimizer': dis_optimizer1.state_dict(),
