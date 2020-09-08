@@ -240,20 +240,20 @@ def train_multi(args, gen_net: nn.Module, dis_net1: nn.Module, dis_net2: nn.Modu
 
     n_dis = 2
 
-    for i in range(n_dis):
-        multiD[i].train()
-        for p in multiD[i].parameters():
-            p.requires_grad = True
-        multiD_opt[i].zero_grad()
-    
-    for p in gen_net.parameters():
-        p.requires_grad = True
-
     d_loss = 0.0
     g_loss = 0.0
 
     for iter_idx, (imgs, _) in enumerate(tqdm(train_loader)):
         global_steps = writer_dict['train_global_steps']
+
+        for i in range(n_dis):
+            multiD[i].train()
+            for p in multiD[i].parameters():
+                p.requires_grad = True
+            multiD_opt[i].zero_grad()
+        
+        for p in gen_net.parameters():
+            p.requires_grad = True
 
         # Adversarial ground truths
         x_real = imgs.type(torch.cuda.FloatTensor)
