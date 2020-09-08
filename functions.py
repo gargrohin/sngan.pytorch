@@ -267,13 +267,12 @@ def train_multi(args, gen_net: nn.Module, dis_net1: nn.Module, dis_net2: nn.Modu
         flag = True
         for i in range(n_dis):
             if flag:
-                D_fake = multiD[i](x_fake).unsqueeze(1)
-                print(D_fake.size())
-                D_real = multiD[i](x_real).unsqueeze(1)
+                D_fake = multiD[i](x_fake)
+                D_real = multiD[i](x_real)
                 flag = False
             else:
-                D_fake = torch.cat((D_fake, multiD[i](x_fake).unsqueeze(1)), dim = 1)
-                D_real = torch.cat((D_real, multiD[i](x_real).unsqueeze(1)), dim = 1)
+                D_fake = torch.cat((D_fake, multiD[i](x_fake)), dim = 1)
+                D_real = torch.cat((D_real, multiD[i](x_real)), dim = 1)
         
         ind = torch.argmin(D_fake, dim = 1)
         mask = torch.zeros((x_real.size()[0], n_dis)).cuda()
@@ -285,7 +284,6 @@ def train_multi(args, gen_net: nn.Module, dis_net1: nn.Module, dis_net2: nn.Modu
                 mask[i][index] = 1.0
             else:
                 mask[i][ind[i]] = 1.0
-        print(mask.size(), D_fake.size(), D_real.size()) 
         D_fake_output = torch.sum(mask*D_fake, dim = 1)
         D_real_output = torch.sum(mask*D_real, dim = 1)
         
