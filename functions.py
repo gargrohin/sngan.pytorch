@@ -224,6 +224,143 @@ def train_chainer(args, gen_net: nn.Module, dis_net: nn.Module, gen_optimizer, d
 
         writer_dict['train_global_steps'] = global_steps + 1
 
+def train_multi(args, gen_net: nn.Module, dis_net1: nn.Module, dis_net2: nn.Module, gen_optimizer, dis_optimizer1, dis_optimizer2, gen_avg_param, train_loader, epoch,
+          writer_dict, schedulers=None, experiment=None):
+    writer = writer_dict['writer']
+    gen_step = 0
+
+    criterion = nn.BCELoss() 
+
+    # train mode
+    gen_net = gen_net.train()
+    dis_net1 = dis_net1.train()
+    dis_net1 = dis_net2.train()
+    multiD = [dis_net1, dis_net2]
+    multiD_opt = [dis_optimizer1, dis_optimizer2]
+
+    n_dis = 2
+
+    d_loss = 0.0
+    g_loss = 0.0
+
+    for iter_idx, (imgs, _) in enumerate(tqdm(train_loader)):
+        global_steps = writer_dict['train_global_steps']
+
+        # Adversarial ground truths
+        x_real = imgs.type(torch.cuda.FloatTensor)
+        y_real = torch.ones(imgs.shape[0], 1).cuda()
+
+        # Sample noise as generator input
+        z = torch.cuda.FloatTensor(np.random.normal(0, 1, (imgs.shape[0], args.latent_dim)))
+        y_fake = torch.zeros(x_real.size()[0], 1).cuda()
+        # ---------------------
+        #  Train Discriminator
+        # ---------------------
+        for i in range(n_dis):
+            multiD_opt[i].zero_grad()
+        
+        gen_optimizer.zero_grad()
+        x_fake = gen_net(z).detach()
+
+        assert x_fake.size() == x_real.size()
+
+        flag = True
+        for i in range(n_dis):
+            if flag:
+                D_fake = multiD[i](x_fake).unsqueeze(1)
+                D_real = multiD[i](x_real).unsqueeze(1)
+                flag = False
+            else:
+                D_fake = torch.cat((D_fake, multiD[i](x_fake).unsqueeze(1)), dim = 1)
+                D_real = torch.cat((D_real, multiD[i](x_real).unsqueeze(1)), dim = 1)
+        
+        ind = torch.argmin(D_fake, dim = 1)
+        mask = torch.zeros((x_real.size()[0], n_dis)).cuda()
+
+        for i in range(mask.size()[0]):
+            random_checker = np.random.randint(0,10)
+            if random_checker > 100:  #100 for no random thingie
+                index = np.random.randint(0,n_dis)
+                mask[i][index] = 1.0
+            else:
+                mask[i][ind[i]] = 1.0
+        
+        D_fake_output = torch.sum(mask*D_fake, dim = 1)
+        D_real_output = torch.sum(mask*D_real, dim = 1)
+        
+        # cal loss
+        d_loss = torch.mean(nn.ReLU(inplace=True)(1.0 - D_real_output)) + \
+                 torch.mean(nn.ReLU(inplace=True)(1 + D_fake_output))
+        # d_loss = criterion(real_validity, y_real) + criterion(fake_validity, y_fake)
+        d_loss.backward()
+        for i in range(n_dis):
+            multiD_opt[i].step()
+
+        writer.add_scalar('d_loss', d_loss.item(), global_steps)
+
+        # -----------------
+        #  Train Generator
+        # -----------------
+        if global_steps % args.n_critic == 0:
+            gen_optimizer.zero_grad()
+
+            gen_z = torch.cuda.FloatTensor(np.random.normal(0, 1, (args.gen_batch_size, args.latent_dim)))
+            fake_img = gen_net(gen_z)
+
+            critic_fakes = []
+            lit = np.zeros(n_dis)
+            for i in range(n_dis):
+                for p in multiD[i].parameters():
+                    p.requires_grad = False
+                critic_fake = multiD[i](fake_img)
+                critic_fakes.append(critic_fake)
+                lit[i] = torch.sum(critic_fake).item()
+            loss_sort = np.argsort(lit)
+            weights = np.random.dirichlet(np.ones(n_dis))
+            weights = np.sort(weights)[::-1]
+
+            flag = False
+            for i in range(len(critic_fakes)):
+                if flag == False:
+                    critic_fake = weights[i]*critic_fakes[loss_sort[i]]
+                    flag = True
+                else:
+                    critic_fake = torch.add(critic_fake, weights[i]*critic_fakes[loss_sort[i]])
+
+            # cal loss
+            g_loss = -torch.mean(critic_fake)
+            # g_loss = criterion(fake_validity, y_fake)
+            g_loss.backward()
+            gen_optimizer.step()
+
+            # adjust learning rate
+            if schedulers:
+                gen_scheduler, dis_scheduler = schedulers
+                g_lr = gen_scheduler.step(global_steps)
+                d_lr = dis_scheduler.step(global_steps)
+                writer.add_scalar('LR/g_lr', g_lr, global_steps)
+                writer.add_scalar('LR/d_lr', d_lr, global_steps)
+
+            # moving average weight
+            for p, avg_p in zip(gen_net.parameters(), gen_avg_param):
+                avg_p.mul_(0.999).add_(0.001, p.data)
+
+            writer.add_scalar('g_loss', g_loss.item(), global_steps)
+            gen_step += 1
+
+        # verbose
+        if gen_step and iter_idx % args.print_freq == 0:
+            tqdm.write(
+                "[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]" %
+                (epoch, args.max_epoch, iter_idx % len(train_loader), len(train_loader), d_loss.item(), g_loss.item()))
+            if experiment != None:
+                experiment.log_metric("gen_loss", g_loss.item())
+                experiment.log_metric("dis_loss", d_loss.item())
+
+        writer_dict['train_global_steps'] = global_steps + 1
+
+
+
 def train(args, gen_net: nn.Module, dis_net: nn.Module, gen_optimizer, dis_optimizer, gen_avg_param, train_loader, epoch,
           writer_dict, schedulers=None, experiment=None):
     writer = writer_dict['writer']
@@ -261,9 +398,9 @@ def train(args, gen_net: nn.Module, dis_net: nn.Module, gen_optimizer, dis_optim
         fake_validity = dis_net(fake_imgs)
 
         # cal loss
-        # d_loss = torch.mean(nn.ReLU(inplace=True)(1.0 - real_validity)) + \
-        #          torch.mean(nn.ReLU(inplace=True)(1 + fake_validity))
-        d_loss = criterion(real_validity, y_real) + criterion(fake_validity, y_fake)
+        d_loss = torch.mean(nn.ReLU(inplace=True)(1.0 - real_validity)) + \
+                 torch.mean(nn.ReLU(inplace=True)(1 + fake_validity))
+        # d_loss = criterion(real_validity, y_real) + criterion(fake_validity, y_fake)
         d_loss.backward()
         dis_optimizer.step()
 
@@ -281,7 +418,8 @@ def train(args, gen_net: nn.Module, dis_net: nn.Module, gen_optimizer, dis_optim
             y_fake = torch.zeros(args.gen_batch_size, 1).cuda()
 
             # cal loss
-            g_loss = criterion(fake_validity, y_fake)
+            g_loss = -torch.mean(fake_validity)
+            # g_loss = criterion(fake_validity, y_fake)
             g_loss.backward()
             gen_optimizer.step()
 
