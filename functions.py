@@ -487,6 +487,8 @@ def validate(args, fixed_z, fid_stat, gen_net: nn.Module, writer_dict):
 
     # get inception score
     logger.info('=> calculate inception score')
+
+    torch.cuda.empty_cache()
     mean, std = get_inception_score(img_list)
 
     # get fid score
