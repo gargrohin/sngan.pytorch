@@ -143,7 +143,7 @@ def main():
         "opt_dis": "Adam_lr_0.0002, (0.0,0.999)",
         "n_dis": 2,
         "z_dim": 128,
-        "n_critic": 1,
+        "n_critic": 5,
         "normalize": "mean,std 0.5",
         "dis_landscape": 0,
         "try": 0,
