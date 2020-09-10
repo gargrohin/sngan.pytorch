@@ -475,15 +475,16 @@ def validate(args, fixed_z, fid_stat, gen_net: nn.Module, writer_dict):
 
     eval_iter = args.num_eval_imgs // args.eval_batch_size
     img_list = list()
-    for iter_idx in tqdm(range(eval_iter), desc='sample images'):
-        z = torch.cuda.FloatTensor(np.random.normal(0, 1, (args.eval_batch_size, args.latent_dim)))
+    with torch.no_grad():
+        for iter_idx in tqdm(range(eval_iter), desc='sample images'):
+            z = torch.cuda.FloatTensor(np.random.normal(0, 1, (args.eval_batch_size, args.latent_dim)))
 
-        # Generate a batch of images
-        gen_imgs = gen_net(z).mul_(127.5).add_(127.5).clamp_(0.0, 255.0).permute(0, 2, 3, 1).to('cpu', torch.uint8).numpy()
-        for img_idx, img in enumerate(gen_imgs):
-            file_name = os.path.join(fid_buffer_dir, f'iter{iter_idx}_b{img_idx}.png')
-            imsave(file_name, img)
-        img_list.extend(list(gen_imgs))
+            # Generate a batch of images
+            gen_imgs = gen_net(z).mul_(127.5).add_(127.5).clamp_(0.0, 255.0).permute(0, 2, 3, 1).to('cpu', torch.uint8).numpy()
+            for img_idx, img in enumerate(gen_imgs):
+                file_name = os.path.join(fid_buffer_dir, f'iter{iter_idx}_b{img_idx}.png')
+                imsave(file_name, img)
+            img_list.extend(list(gen_imgs))
 
     # get inception score
     logger.info('=> calculate inception score')
