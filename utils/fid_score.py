@@ -319,7 +319,7 @@ def calculate_fid_given_paths(paths, inception_path, low_profile=False):
         m2, s2 = _handle_path(paths[1], sess, low_profile=low_profile)
         fid_value = calculate_frechet_distance(m1, s1, m2, s2)
     sess.close()
-    tf.reset_default_graph()
+    #tf.reset_default_graph()
     del m1, s1, m2, s2
 
     return fid_value
