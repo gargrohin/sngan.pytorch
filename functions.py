@@ -234,6 +234,7 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
 
     for imgs,_ in train_loader:
         exemplar = imgs.type(torch.cuda.FloatTensor)
+        exemplar = exemplar[:10]
         break
 
     if epoch > 0 and epoch % 1 == 0:
@@ -246,8 +247,8 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
                 else:
                     exemplar_res = torch.cat((multiD[dis_index](exemplar).unsqueeze(0), exemplar_res), dim=0)
         
-        exemplar_max = torch.max(exemplar_res, dim = 0).cpu()
-        exemplar_min = torch.min(exemplar_res, dim = 0).cpu()
+        exemplar_max,_ = torch.max(exemplar_res, dim = 0)
+        exemplar_min,_ = torch.min(exemplar_res, dim = 0)
         # for bol in (exemplar_sum < 0.3):
         #     if bol.item():
         #         addno = True
