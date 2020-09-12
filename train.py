@@ -68,7 +68,7 @@ def main():
 
     multiD = []
     multiD_opt = []
-    for i in range(2):
+    for i in range(4):
         dis_net = eval('models.'+args.model+'.Discriminator')(args=args).cuda()
         dis_net.apply(weights_init)
         opt = torch.optim.Adam(filter(lambda p: p.requires_grad, dis_net.parameters()),
@@ -151,7 +151,7 @@ def main():
         "model": "multiD_resnet",
         "opt_gen": "Adam_lr_0.0002, (0.0,0.999)",
         "opt_dis": "Adam_lr_0.0002, (0.0,0.999)",
-        "n_dis": 2,
+        "n_dis": 4,
         "rand_thresh": 0.7,
         "z_dim": 128,
         "n_critic": 5,

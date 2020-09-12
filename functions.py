@@ -232,22 +232,22 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
     criterion = nn.BCELoss()
     n_dis = len(multiD)
 
-    for imgs,_ in train_loader:
-        exemplar = imgs.type(torch.cuda.FloatTensor)
-        break
+    # for imgs,_ in train_loader:
+    #     exemplar = imgs.type(torch.cuda.FloatTensor)
+    #     break
 
-    if epoch > 0 and epoch % 1 == 0:
-        exemplar_flag = True
-        with torch.no_grad():
-            for dis_index in range(n_dis):
-                if exemplar_flag:
-                    exemplar_res = multiD[dis_index](exemplar).unsqueeze(0)
-                    exemplar_flag = False
-                else:
-                    exemplar_res = torch.cat((multiD[dis_index](exemplar).unsqueeze(0), exemplar_res), dim=0)
+    # if epoch > 0 and epoch % 1 == 0:
+    #     exemplar_flag = True
+    #     with torch.no_grad():
+    #         for dis_index in range(n_dis):
+    #             if exemplar_flag:
+    #                 exemplar_res = multiD[dis_index](exemplar).unsqueeze(0)
+    #                 exemplar_flag = False
+    #             else:
+    #                 exemplar_res = torch.cat((multiD[dis_index](exemplar).unsqueeze(0), exemplar_res), dim=0)
         
-        exemplar_max = torch.max(exemplar_res, dim = 0).cpu()
-        exemplar_min = torch.min(exemplar_res, dim = 0).cpu()
+        # exemplar_max = torch.max(exemplar_res, dim = 0)
+        # exemplar_min = torch.min(exemplar_res, dim = 0)
         # for bol in (exemplar_sum < 0.3):
         #     if bol.item():
         #         addno = True
@@ -258,7 +258,7 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
         #     for bol in (exemplar_sum > 0.9):
         #         if bol.item():
         #             addno = True
-        print(exemplar_max, exemplar_min)
+        # print(exemplar_max, exemplar_min)
 
 
 
@@ -313,7 +313,7 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
                 D_fake = torch.cat((D_fake, multiD[i](x_fake)), dim = 1)
                 D_real = torch.cat((D_real, multiD[i](x_real)), dim = 1)
         
-        ind = torch.argmin(D_fake, dim = 1)
+        ind = torch.argmax(D_real, dim = 1)
         mask = torch.zeros((x_real.size()[0], n_dis)).cuda()
 
         for i in range(mask.size()[0]):
