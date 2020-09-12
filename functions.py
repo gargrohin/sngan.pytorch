@@ -229,7 +229,39 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
     writer = writer_dict['writer']
     gen_step = 0
 
-    criterion = nn.BCELoss() 
+    criterion = nn.BCELoss()
+    n_dis = len(multiD)
+
+    for imgs,_ in train_loader:
+        exemplar = imgs.type(torch.cuda.FloatTensor)
+        break
+
+    if epoch > 0 and epoch % 1 == 0:
+        exemplar_flag = True
+        with torch.no_grad():
+            for dis_index in range(n_dis):
+                if exemplar_flag:
+                    exemplar_res = multiD[dis_index](exemplar).unsqueeze(0)
+                    exemplar_flag = False
+                else:
+                    exemplar_res = torch.cat((multiD[dis_index](exemplar).unsqueeze(0), exemplar_res), dim=0)
+        
+        exemplar_max = torch.max(exemplar_res, dim = 0).cpu()
+        exemplar_min = torch.min(exemplar_res, dim = 0).cpu()
+        # for bol in (exemplar_sum < 0.3):
+        #     if bol.item():
+        #         addno = True
+        #         print('\nadding\n')
+        #         break
+        
+        # if addno == False:
+        #     for bol in (exemplar_sum > 0.9):
+        #         if bol.item():
+        #             addno = True
+        print(exemplar_max, exemplar_min)
+
+
+
 
     # train mode
     gen_net = gen_net.train()
@@ -237,8 +269,6 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
     # dis_net1 = dis_net2.train()
     # multiD = [dis_net1, dis_net2]
     # multiD_opt = [dis_optimizer1, dis_optimizer2]
-
-    n_dis = len(multiD)
 
     d_loss = 0.0
     g_loss = 0.0
