@@ -146,7 +146,7 @@ def main():
         'valid_global_steps': start_epoch // args.val_freq,
     }
 
-    experiment = comet_ml.Experiment(project_name="multiD_resnet2")
+    experiment = comet_ml.Experiment(project_name="multiD_resnet")
     exp_parameters = {
         "data": "cifar10_32x32",
         "model": "multiD_resnet",
