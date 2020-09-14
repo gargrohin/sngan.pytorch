@@ -68,7 +68,7 @@ def main():
 
     multiD = []
     multiD_opt = []
-    for i in range(4):
+    for i in range(1):
         dis_net = eval('models.'+args.model+'.Discriminator')(args=args).cuda()
         dis_net.apply(weights_init)
         opt = torch.optim.Adam(filter(lambda p: p.requires_grad, dis_net.parameters()),
@@ -145,16 +145,16 @@ def main():
         'valid_global_steps': start_epoch // args.val_freq,
     }
 
-    experiment = comet_ml.Experiment(project_name="multiD_resnet2")
+    experiment = comet_ml.Experiment(project_name="multiD_sngan`")
     exp_parameters = {
         "data": "cifar10_32x32",
-        "model": "multiD_resnet",
+        "model": "multiD_sngan",
         "opt_gen": "Adam_lr_0.0002, (0.0,0.999)",
         "opt_dis": "Adam_lr_0.0002, (0.0,0.999)",
-        "n_dis": 4,
-        "rand_thresh": 0.8,
+        "n_dis": 1,
+        "rand_thresh": 0.6,
         "z_dim": 128,
-        "n_critic": 1,
+        "n_critic": 5,
         "normalize": "mean,std 0.5",
         "dis_landscape": 0,
         "try": 0,
