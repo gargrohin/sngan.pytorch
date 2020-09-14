@@ -145,22 +145,23 @@ def main():
         'valid_global_steps': start_epoch // args.val_freq,
     }
 
-    experiment = comet_ml.Experiment(project_name="multiD_sngan")
+    experiment = comet_ml.Experiment(project_name="multiD_resnet2")
     exp_parameters = {
         "data": "cifar10_32x32",
         "model": "multiD_resnet",
         "opt_gen": "Adam_lr_0.0002, (0.0,0.999)",
         "opt_dis": "Adam_lr_0.0002, (0.0,0.999)",
         "n_dis": 4,
-        "rand_thresh": 0.7,
+        "rand_thresh": 0.8,
         "z_dim": 128,
-        "n_critic": 5,
+        "n_critic": 1,
         "normalize": "mean,std 0.5",
         "dis_landscape": 0,
         "try": 0,
         "model_save": args.path_helper['log_path']
     }
     output = '.temp_multi.png'
+    experiment.log_parameters(exp_parameters)
 
     # train loop
     lr_schedulers = None#(gen_scheduler, dis_scheduler1) if args.lr_decay else None
