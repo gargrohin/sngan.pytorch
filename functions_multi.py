@@ -30,6 +30,10 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
 
     n_dis = len(multiD)
 
+    # exemplar TODO
+
+    exemplar = None
+
     if epoch > 0 and epoch % 1 == 0:
         exemplar_flag = True
         with torch.no_grad():
@@ -52,8 +56,26 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
             for bol in (exemplar_sum > 0.9):
                 if bol.item():
                     addno = True
-        print(exemplar_max, exemplar_min)
-
+        if addno:
+            addno = False
+            dcopy = deepcopy(multi_dis[n_dis-1]).cpu()
+            sdict = dcopy.state_dict()
+            for i, p in enumerate(sdict):
+                if i <4:
+                    continue
+                # print(p)
+                sdict[p] = 0.01*torch.randn(sdict[p].size())
+            dcopy.load_state_dict(sdict)
+            multiD.append(dcopy.cuda())
+            sdict = multiD[n_dis-1].state_dict()
+            for i, p in enumerate(sdict):
+                # if i <4:
+                #   continue
+                # print(p)
+                sdict[p] = sdict[p] + 0.1*torch.randn(sdict[p].size()).cuda()
+            multiD[n_dis-1].load_state_dict(sdict)
+            multiD_opt.append(torch.optim.Adam(multiD[n_dis].parameters(), lr = args.lr, betas = (0.5,0.999)))
+            n_dis  = n_dis + 1
 
 
 
