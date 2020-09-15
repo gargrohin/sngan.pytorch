@@ -311,13 +311,13 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
                 D_fake = torch.cat((D_fake, multiD[i](x_fake)), dim = 1)
                 D_real = torch.cat((D_real, multiD[i](x_real)), dim = 1)
         
-        ind = torch.argmin(D_fake, dim = 1)
+        ind = torch.argmax(D_real, dim = 1)
         mask = torch.zeros((x_real.size()[0], n_dis)).cuda()
         mask2 = torch.zeros((x_real.size()[0]*2, n_dis)).cuda()
 
         for i in range(mask.size()[0]):
             random_checker = np.random.randint(0,10)
-            if random_checker > 7:  #100 for no random thingie
+            if random_checker > 8:  #100 for no random thingie
                 index = np.random.randint(0,n_dis)
                 mask[i][index] = 1.0
                 mask2[i][index] = 1.0
@@ -326,7 +326,7 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
                 mask2[i][ind[i]] = 1.0
         
         for i in range(mask.size()[0], mask2.size()[0]):
-            mask2[i][ind[i]] = 1.0
+            mask2[i][np.random.randint(0,n_dis)] = 1.0
         
         D_fake_output = torch.sum(mask2*D_fake, dim = 1)
         D_real_output = torch.sum(mask*D_real, dim = 1)
