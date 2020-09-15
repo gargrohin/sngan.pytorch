@@ -146,10 +146,10 @@ def main():
         'valid_global_steps': start_epoch // args.val_freq,
     }
 
-    experiment = comet_ml.Experiment(project_name="multiD_sngan")
+    experiment = comet_ml.Experiment(project_name="multiD_sngan1")
     exp_parameters = {
         "data": "cifar10_32x32",
-        "model": "multiD_sngan",
+        "model": "multiD_sngan1",
         "opt_gen": "Adam_lr_0.0002, (0.0,0.999)",
         "opt_dis": "Adam_lr_0.0001, (0.0,0.999)",
         "n_dis": n_dis,
