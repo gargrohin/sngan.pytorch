@@ -12,7 +12,7 @@ python train.py \
 --gf_dim 256 \
 --df_dim 128 \
 --g_spectral_norm False \
---d_spectral_norm True \
+--d_spectral_norm False \
 --g_lr 0.0002 \
 --d_lr 0.0002 \
 --beta1 0.0 \
