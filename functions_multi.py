@@ -15,12 +15,28 @@ from imageio import imsave
 from tqdm import tqdm
 from copy import deepcopy
 import logging
+import models
 
 from utils.inception_score import get_inception_score
 from utils.fid_score import calculate_fid_given_paths
 
 
 logger = logging.getLogger(__name__)
+
+def weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv2d') != -1:
+        if args.init_type == 'normal':
+            nn.init.normal_(m.weight.data, 0.0, 0.02)
+        elif args.init_type == 'orth':
+            nn.init.orthogonal_(m.weight.data)
+        elif args.init_type == 'xavier_uniform':
+            nn.init.xavier_uniform(m.weight.data, 1.)
+        else:
+            raise NotImplementedError('{} unknown inital type'.format(args.init_type))
+    elif classname.find('BatchNorm2d') != -1:
+        nn.init.normal_(m.weight.data, 1.0, 0.02)
+        nn.init.constant_(m.bias.data, 0.0)
 
 
 def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen_avg_param, train_loader, epoch,
@@ -32,9 +48,12 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
 
     # exemplar TODO
 
-    exemplar = None
-
-    if epoch > 0 and epoch % 1 == 0:
+    for imgs,_ in train_loader:
+        exemplar = imgs[:16]
+        break
+    
+    addno = False
+    if epoch > 19 and epoch % 10 == 0:
         exemplar_flag = True
         with torch.no_grad():
             for dis_index in range(n_dis):
@@ -44,38 +63,41 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
                 else:
                     exemplar_res = torch.cat((multiD[dis_index](exemplar).unsqueeze(0), exemplar_res), dim=0)
         
+        alpha = 2.0
         exemplar_max = torch.max(exemplar_res, dim = 0)
         exemplar_min = torch.min(exemplar_res, dim = 0)
-        for bol in (exemplar_sum < 0.3):
-            if bol.item():
+        for i in range(n_dis):
+            if exemplar_max[i].item() > alpha*torch.mean(exemplar_res[i]).item():
                 addno = True
-                print('\nadding\n')
-                break
-        
-        if addno == False:
-            for bol in (exemplar_sum > 0.9):
-                if bol.item():
-                    addno = True
+
         if addno:
+            print('\n adding D \n')
             addno = False
-            dcopy = deepcopy(multi_dis[n_dis-1]).cpu()
-            sdict = dcopy.state_dict()
-            for i, p in enumerate(sdict):
-                if i <4:
-                    continue
-                # print(p)
-                sdict[p] = 0.01*torch.randn(sdict[p].size())
-            dcopy.load_state_dict(sdict)
-            multiD.append(dcopy.cuda())
-            sdict = multiD[n_dis-1].state_dict()
-            for i, p in enumerate(sdict):
-                # if i <4:
-                #   continue
-                # print(p)
-                sdict[p] = sdict[p] + 0.1*torch.randn(sdict[p].size()).cuda()
-            multiD[n_dis-1].load_state_dict(sdict)
-            multiD_opt.append(torch.optim.Adam(multiD[n_dis].parameters(), lr = args.lr, betas = (0.5,0.999)))
-            n_dis  = n_dis + 1
+            d_new = eval('models.'+args.model+'.Discriminator')(args=args).cuda()
+            d_new.apply(weights_init)
+            multiD.append(d_new)
+            multiD_opt.append(torch.optim.Adam(filter(lambda p: p.requires_grad, multiD[n_dis].parameters()),
+                                args.d_lr, (args.beta1, args.beta2)))
+            n_dis +=1
+
+            # dcopy = deepcopy(multiD[n_dis-1]).cpu()
+            # sdict = dcopy.state_dict()
+            # for i, p in enumerate(sdict):
+            #     if i <4:
+            #         continue
+            #     # print(p)
+            #     sdict[p] = 0.01*torch.randn(sdict[p].size())
+            # dcopy.load_state_dict(sdict)
+            # multiD.append(dcopy.cuda())
+            # sdict = multiD[n_dis-1].state_dict()
+            # for i, p in enumerate(sdict):
+            #     # if i <4:
+            #     #   continue
+            #     # print(p)
+            #     sdict[p] = sdict[p] + 0.1*torch.randn(sdict[p].size()).cuda()
+            # multiD[n_dis-1].load_state_dict(sdict)
+            # multiD_opt.append(torch.optim.Adam(multiD[n_dis].parameters(), lr = args.lr, betas = (0.5,0.999)))
+            # n_dis  = n_dis + 1
 
 
 
