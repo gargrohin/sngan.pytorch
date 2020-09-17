@@ -47,11 +47,11 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
     n_dis = len(multiD)
 
     for imgs,_ in train_loader:
-        exemplar = imgs[:16]
+        exemplar = imgs[:16].type(torch.cuda.FloatTensor)
         break
     
     addno = False
-    if epoch > 19 and epoch % 10 == 0:
+    if epoch > -1 and epoch % 2 == 0:
         exemplar_flag = True
         with torch.no_grad():
             for dis_index in range(n_dis):

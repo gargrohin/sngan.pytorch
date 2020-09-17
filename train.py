@@ -153,7 +153,7 @@ def main():
         "opt_gen": "Adam_lr_0.0002, (0.0,0.999)",
         "opt_dis": "Adam_lr_0.0002, (0.0,0.999)",
         "alpha": 2,
-        "freq": 10,
+        "freq": 2,
         "rand_thresh": 0.7,
         "z_dim": 128,
         "n_critic": 5,
