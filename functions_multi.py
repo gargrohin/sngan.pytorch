@@ -62,8 +62,8 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
                     exemplar_res = torch.cat((multiD[dis_index](exemplar).unsqueeze(0), exemplar_res), dim=0)
         
         alpha = 2.0
-        exemplar_max = torch.max(exemplar_res, dim = 0)
-        exemplar_min = torch.min(exemplar_res, dim = 0)
+        exemplar_max,_ = torch.max(exemplar_res, dim = 0)
+        exemplar_min,_ = torch.min(exemplar_res, dim = 0)
         for i in range(n_dis):
             if exemplar_max[i].item() > alpha*torch.mean(exemplar_res[i]).item():
                 addno = True
