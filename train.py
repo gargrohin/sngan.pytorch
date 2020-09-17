@@ -13,7 +13,7 @@ comet_ml.config.save(api_key="CX4nLhknze90b8yiN2WMZs9Vw")
 import cfg
 import models
 import datasets
-from functions import train_multi, validate, LinearLrDecay, load_params, copy_params
+from functions_multi import train_multi, validate, LinearLrDecay, load_params, copy_params
 from utils.utils import set_log_dir, save_checkpoint, create_logger
 from utils.inception_score import _init_inception
 from utils.fid_score import create_inception_graph, check_or_download_inception
