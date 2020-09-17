@@ -46,8 +46,6 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
 
     n_dis = len(multiD)
 
-    # exemplar TODO
-
     for imgs,_ in train_loader:
         exemplar = imgs[:16]
         break
@@ -69,7 +67,13 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
         for i in range(n_dis):
             if exemplar_max[i].item() > alpha*torch.mean(exemplar_res[i]).item():
                 addno = True
-
+                if n_dis > 4:
+                    addno = False
+                    "\nAdd True but N_dis > 4\n"
+                    break
+                break
+        
+        
         if addno:
             print('\n adding D \n')
             addno = False

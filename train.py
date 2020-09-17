@@ -68,7 +68,7 @@ def main():
 
     multiD = []
     multiD_opt = []
-    n_dis = 4
+    n_dis = 1
     for i in range(n_dis):
         dis_net = eval('models.'+args.model+'.Discriminator')(args=args).cuda()
         dis_net.apply(weights_init)
@@ -146,16 +146,17 @@ def main():
         'valid_global_steps': start_epoch // args.val_freq,
     }
 
-    experiment = comet_ml.Experiment(project_name="multiD_resnet")
+    experiment = comet_ml.Experiment(project_name="multiD_resnet_dyn1")
     exp_parameters = {
         "data": "cifar10_32x32",
-        "model": "multiD_resnet",
+        "model": "multiD_resnet_dyn1",
         "opt_gen": "Adam_lr_0.0002, (0.0,0.999)",
         "opt_dis": "Adam_lr_0.0002, (0.0,0.999)",
-        "n_dis": n_dis,
+        "alpha": 2,
+        "freq": 10,
         "rand_thresh": 0.7,
         "z_dim": 128,
-        "n_critic": 7,
+        "n_critic": 5,
         "normalize": "mean,std 0.5",
         "dis_landscape": 0,
         "try": 0,
@@ -174,6 +175,7 @@ def main():
         if epoch and epoch % args.val_freq == 0 or epoch == int(args.max_epoch)-1:
             backup_param = copy_params(gen_net)
             load_params(gen_net, gen_avg_param)
+            fixed_z = torch.cuda.FloatTensor(np.random.normal(0, 1, (64, args.latent_dim)))
             inception_score, fid_score, sample_imgs = validate(args, fixed_z, fid_stat, gen_net, writer_dict)
             logger.info(f'Inception score: {inception_score}, FID score: {fid_score} || @ epoch {epoch}.')
             
