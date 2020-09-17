@@ -51,7 +51,7 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
         break
     
     addno = False
-    if epoch > -1 and epoch % 2 == 0:
+    if epoch > 1 and epoch % 10 == 0:
         exemplar_flag = True
         with torch.no_grad():
             for dis_index in range(n_dis):
@@ -61,7 +61,7 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
                 else:
                     exemplar_res = torch.cat((multiD[dis_index](exemplar).unsqueeze(0), exemplar_res), dim=0)
         
-        alpha = 2.0
+        alpha = 1.5
         exemplar_max,_ = torch.max(exemplar_res, dim = 0)
         exemplar_min,_ = torch.min(exemplar_res, dim = 0)
         for i in range(n_dis):
