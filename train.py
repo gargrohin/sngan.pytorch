@@ -152,7 +152,7 @@ def main():
         "model": "multiD_resnet_dyn1",
         "opt_gen": "Adam_lr_0.0002, (0.0,0.999)",
         "opt_dis": "Adam_lr_0.0002, (0.0,0.999)",
-        "alpha": 1.5,
+        "alpha": 2.5,
         "freq": 10,
         "rand_thresh": 0.7,
         "z_dim": 128,

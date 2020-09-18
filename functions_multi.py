@@ -23,7 +23,7 @@ from utils.fid_score import calculate_fid_given_paths
 
 logger = logging.getLogger(__name__)
 
-def weights_init(m):
+def weights_init(m, args):
     classname = m.__class__.__name__
     if classname.find('Conv2d') != -1:
         if args.init_type == 'normal':
@@ -61,7 +61,7 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
                 else:
                     exemplar_res = torch.cat((multiD[dis_index](exemplar).unsqueeze(0), exemplar_res), dim=0)
         
-        alpha = 1.5
+        alpha = 2.5
         exemplar_max,_ = torch.max(exemplar_res, dim = 0)
         exemplar_min,_ = torch.min(exemplar_res, dim = 0)
         for i in range(n_dis):
@@ -78,7 +78,7 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
             print('\n adding D \n')
             addno = False
             d_new = eval('models.'+args.model+'.Discriminator')(args=args).cuda()
-            d_new.apply(weights_init)
+            d_new.apply(weights_init, args)
             multiD.append(d_new)
             multiD_opt.append(torch.optim.Adam(filter(lambda p: p.requires_grad, multiD[n_dis].parameters()),
                                 args.d_lr, (args.beta1, args.beta2)))
