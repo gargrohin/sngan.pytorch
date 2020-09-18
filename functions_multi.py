@@ -60,7 +60,7 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
                 else:
                     exemplar_res = torch.cat((multiD[dis_index](exemplar).unsqueeze(0), exemplar_res), dim=0)
         
-        alpha = 2.5
+        alpha = 1.5
         exemplar_max,_ = torch.max(exemplar_res, dim = 0)
         exemplar_min,_ = torch.min(exemplar_res, dim = 0)
         for i in range(n_dis):
@@ -77,7 +77,7 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
             print('\n adding D \n')
             addno = False
             d_new = eval('models.'+args.model+'.Discriminator')(args=args).cuda()
-            d_new.apply(weights_init, args)
+            d_new.apply(weights_init)
             multiD.append(d_new)
             multiD_opt.append(torch.optim.Adam(filter(lambda p: p.requires_grad, multiD[n_dis].parameters()),
                                 args.d_lr, (args.beta1, args.beta2)))
