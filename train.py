@@ -146,13 +146,13 @@ def main():
         'valid_global_steps': start_epoch // args.val_freq,
     }
 
-    experiment = comet_ml.Experiment(project_name="multiD_resnet_dyn1")
+    experiment = comet_ml.Experiment(project_name="multiD_resnet_dyn2")
     exp_parameters = {
         "data": "cifar10_32x32",
-        "model": "multiD_resnet_dyn1",
+        "model": "multiD_resnet_dyn2",
         "opt_gen": "Adam_lr_0.0002, (0.0,0.999)",
         "opt_dis": "Adam_lr_0.0002, (0.0,0.999)",
-        "alpha": 1.5,
+        "alpha": 0.9,
         "freq": 10,
         "rand_thresh": 0.7,
         "z_dim": 128,
@@ -169,7 +169,7 @@ def main():
     lr_schedulers = None#(gen_scheduler, dis_scheduler1) if args.lr_decay else None
     print("args.lr_decay: ", args.lr_decay)
     for epoch in tqdm(range(int(start_epoch), int(args.max_epoch)), desc='total progress'):
-        train_multi(args, gen_net, multiD, gen_optimizer, multiD_opt, gen_avg_param, train_loader, epoch, writer_dict,
+        multiD, multiD_opt = train_multi(args, gen_net, multiD, gen_optimizer, multiD_opt, gen_avg_param, train_loader, epoch, writer_dict,
               lr_schedulers, experiment)       
 
         if epoch and epoch % args.val_freq == 0 or epoch == int(args.max_epoch)-1:

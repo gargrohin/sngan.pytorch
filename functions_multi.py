@@ -60,15 +60,16 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
                 else:
                     exemplar_res = torch.cat((multiD[dis_index](exemplar).unsqueeze(0), exemplar_res), dim=0)
         
-        alpha = 1.5
+        alpha = 0.9
         exemplar_max,_ = torch.max(exemplar_res, dim = 0)
         exemplar_min,_ = torch.min(exemplar_res, dim = 0)
+        print(exemplar_min)
         for i in range(n_dis):
-            if exemplar_max[i].item() > alpha*torch.mean(exemplar_res[i]).item():
+            if exemplar_min[i].item() > alpha*torch.mean(exemplar_res[i]).item():
                 addno = True
-                if n_dis > 4:
+                if n_dis > 5:
                     addno = False
-                    "\nAdd True but N_dis > 4\n"
+                    "\nAdd True but N_dis > 5\n"
                     break
                 break
         
@@ -82,6 +83,7 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
             multiD_opt.append(torch.optim.Adam(filter(lambda p: p.requires_grad, multiD[n_dis].parameters()),
                                 args.d_lr, (args.beta1, args.beta2)))
             n_dis +=1
+        print('\nn_dis: ', n_dis)
 
             # dcopy = deepcopy(multiD[n_dis-1]).cpu()
             # sdict = dcopy.state_dict()
@@ -240,6 +242,7 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
                 experiment.log_metric("dis_loss", d_loss.item())
 
         writer_dict['train_global_steps'] = global_steps + 1
+    return multiD, multiD_opt
 
 def validate(args, fixed_z, fid_stat, gen_net: nn.Module, writer_dict):
     writer = writer_dict['writer']
