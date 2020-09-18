@@ -23,28 +23,27 @@ from utils.fid_score import calculate_fid_given_paths
 
 logger = logging.getLogger(__name__)
 
-def weights_init(m, args):
-    classname = m.__class__.__name__
-    if classname.find('Conv2d') != -1:
-        if args.init_type == 'normal':
-            nn.init.normal_(m.weight.data, 0.0, 0.02)
-        elif args.init_type == 'orth':
-            nn.init.orthogonal_(m.weight.data)
-        elif args.init_type == 'xavier_uniform':
-            nn.init.xavier_uniform(m.weight.data, 1.)
-        else:
-            raise NotImplementedError('{} unknown inital type'.format(args.init_type))
-    elif classname.find('BatchNorm2d') != -1:
-        nn.init.normal_(m.weight.data, 1.0, 0.02)
-        nn.init.constant_(m.bias.data, 0.0)
-
-
 def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen_avg_param, train_loader, epoch,
           writer_dict, schedulers=None, experiment=None):
     writer = writer_dict['writer']
     gen_step = 0
 
     n_dis = len(multiD)
+
+    def weights_init(m):
+        classname = m.__class__.__name__
+        if classname.find('Conv2d') != -1:
+            if args.init_type == 'normal':
+                nn.init.normal_(m.weight.data, 0.0, 0.02)
+            elif args.init_type == 'orth':
+                nn.init.orthogonal_(m.weight.data)
+            elif args.init_type == 'xavier_uniform':
+                nn.init.xavier_uniform(m.weight.data, 1.)
+            else:
+                raise NotImplementedError('{} unknown inital type'.format(args.init_type))
+        elif classname.find('BatchNorm2d') != -1:
+            nn.init.normal_(m.weight.data, 1.0, 0.02)
+            nn.init.constant_(m.bias.data, 0.0)
 
     for imgs,_ in train_loader:
         exemplar = imgs[:16].type(torch.cuda.FloatTensor)
