@@ -50,19 +50,21 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
         break
     
     addno = False
-    if epoch > 1 and epoch % 10 == 0:
+    if epoch > -1 and epoch % 10 == 0:
         exemplar_flag = True
         with torch.no_grad():
             for dis_index in range(n_dis):
                 if exemplar_flag:
-                    exemplar_res = multiD[dis_index](exemplar).unsqueeze(0)
+                    exemplar_res = multiD[dis_index](exemplar)#.unsqueeze(0)
                     exemplar_flag = False
                 else:
-                    exemplar_res = torch.cat((multiD[dis_index](exemplar).unsqueeze(0), exemplar_res), dim=0)
+                    exemplar_res = torch.cat((multiD[dis_index](exemplar), exemplar_res), dim=0)
         
-        alpha = 0.9
-        exemplar_max,_ = torch.max(exemplar_res, dim = 1)
-        exemplar_min,_ = torch.min(exemplar_res, dim = 1)
+        alpha = 0.7
+        print('\n',exemplar_res)
+        exemplar_max,_ = torch.max(exemplar_res, dim = 0)
+        exemplar_min,_ = torch.min(exemplar_res, dim = 0)
+        print('\n',exemplar_min)
         for i in range(n_dis):
             if exemplar_min[i].item() > alpha*torch.mean(exemplar_res[i]).item():
                 addno = True
