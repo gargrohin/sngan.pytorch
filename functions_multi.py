@@ -60,13 +60,24 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
                 else:
                     exemplar_res = torch.cat((multiD[dis_index](exemplar).unsqueeze(0), exemplar_res), dim=0)
         print(exemplar_res.size())
-        alpha = 0.3
+        alpha = [0.5, 2]
         print('\n',exemplar_res, torch.mean(exemplar_res, dim = 1))
         exemplar_max,_ = torch.max(exemplar_res, dim = 1)
         exemplar_min,_ = torch.min(exemplar_res, dim = 1)
         print('\n',exemplar_min)
         for i in range(n_dis):
-            if exemplar_min[i].item() > alpha*torch.mean(exemplar_res[i]).item():
+            if exemplar_min[i].item() > alpha[0]*torch.mean(exemplar_res[i]).item():
+                addno = True
+                print(exemplar_min[i].item(), torch.mean(exemplar_res[i]).item())
+                if n_dis > 4:
+                    addno = False
+                    "\nAdd True but N_dis > 4\n"
+                    break
+                break
+        for i in range(n_dis):
+            if addno:
+                break
+            if exemplar_max[i].item() > alpha[1]*torch.mean(exemplar_res[i]).item():
                 addno = True
                 print(exemplar_min[i].item(), torch.mean(exemplar_res[i]).item())
                 if n_dis > 4:
