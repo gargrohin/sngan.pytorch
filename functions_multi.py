@@ -60,8 +60,8 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
                 else:
                     exemplar_res = torch.cat((multiD[dis_index](exemplar).unsqueeze(0), exemplar_res), dim=0)
         print(exemplar_res.size())
-        alpha = 0.7
-        print('\n',exemplar_res)
+        alpha = 0.3
+        print('\n',exemplar_res, torch.mean(exemplar_res, dim = 1))
         exemplar_max,_ = torch.max(exemplar_res, dim = 1)
         exemplar_min,_ = torch.min(exemplar_res, dim = 1)
         print('\n',exemplar_min)
