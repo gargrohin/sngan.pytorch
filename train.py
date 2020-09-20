@@ -13,7 +13,7 @@ comet_ml.config.save(api_key="CX4nLhknze90b8yiN2WMZs9Vw")
 import cfg
 import models
 import datasets
-from functions import train_multi, validate, LinearLrDecay, load_params, copy_params
+from functions import train_wgan, validate, LinearLrDecay, load_params, copy_params
 from utils.utils import set_log_dir, save_checkpoint, create_logger
 from utils.inception_score import _init_inception
 from utils.fid_score import create_inception_graph, check_or_download_inception
@@ -68,7 +68,7 @@ def main():
 
     multiD = []
     multiD_opt = []
-    n_dis = 4
+    n_dis = 1
     for i in range(n_dis):
         dis_net = eval('models.'+args.model+'.Discriminator')(args=args).cuda()
         dis_net.apply(weights_init)
@@ -146,21 +146,22 @@ def main():
         'valid_global_steps': start_epoch // args.val_freq,
     }
 
-    experiment = comet_ml.Experiment(project_name="multiD_sngan1")
+    experiment = comet_ml.Experiment(project_name="wgangp-resnet")
     exp_parameters = {
         "data": "cifar10_32x32",
-        "model": "multiD_sngan1",
+        "model": "wgangp-cifar10",
         "opt_gen": "Adam_lr_0.0002, (0.0,0.999)",
         "opt_dis": "Adam_lr_0.0002, (0.0,0.999)",
         "alpha": "0.5,2",
         "freq": 10,
+        "gp lamba": 10,
         "rand_thresh": 0.6,
         "n_dis": n_dis,
         "z_dim": 128,
-        "n_critic": 7,
+        "n_critic": 5,
         "normalize": "mean,std 0.5",
         "dis_landscape": 0,
-        "try": 1,
+        "try": 0,
         "model_save": args.path_helper['log_path']
     }
     output = '.temp_multi.png'
@@ -170,7 +171,7 @@ def main():
     lr_schedulers = None#(gen_scheduler, dis_scheduler1) if args.lr_decay else None
     print("args.lr_decay: ", args.lr_decay)
     for epoch in tqdm(range(int(start_epoch), int(args.max_epoch)), desc='total progress'):
-        train_multi(args, gen_net, multiD, gen_optimizer, multiD_opt, gen_avg_param, train_loader, epoch, writer_dict,
+        train_wgan(args, gen_net, multiD, gen_optimizer, multiD_opt, gen_avg_param, train_loader, epoch, writer_dict,
               lr_schedulers, experiment)       
 
         if epoch and epoch % args.val_freq == 0 or epoch == int(args.max_epoch)-1:
