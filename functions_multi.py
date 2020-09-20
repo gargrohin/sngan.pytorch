@@ -69,7 +69,7 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
             if exemplar_min[i].item() > alpha[0]*torch.mean(exemplar_res[i]).item():
                 addno = True
                 print(exemplar_min[i].item(), torch.mean(exemplar_res[i]).item())
-                if n_dis > 4:
+                if n_dis > 3:
                     addno = False
                     "\nAdd True but N_dis > 4\n"
                     break
@@ -80,7 +80,7 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
             if exemplar_max[i].item() > alpha[1]*torch.mean(exemplar_res[i]).item():
                 addno = True
                 print(exemplar_min[i].item(), torch.mean(exemplar_res[i]).item())
-                if n_dis > 4:
+                if n_dis > 3:
                     addno = False
                     "\nAdd True but N_dis > 4\n"
                     break
