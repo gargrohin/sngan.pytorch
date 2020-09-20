@@ -317,7 +317,7 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
 
         for i in range(mask.size()[0]):
             random_checker = np.random.randint(0,10)
-            if random_checker > 7:  #100 for no random thingie
+            if random_checker > 6:  #100 for no random thingie
                 index = np.random.randint(0,n_dis)
                 mask[i][index] = 1.0
                 mask2[i][index] = 1.0
