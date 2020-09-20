@@ -20,4 +20,4 @@ python train.py \
 --init_type xavier_uniform \
 --n_critic 5 \
 --val_freq 20 \
---exp_name multiD_dyn2
+--exp_name wgangp-cifar10

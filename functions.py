@@ -264,7 +264,7 @@ def train_wgan(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen_
             multiD_opt[i].zero_grad()
         
         gen_optimizer.zero_grad()
-        x_fake = gen_net(z).detach()
+        x_fake = gen_net(z)
 
         # assert x_fake.size() == x_real.size()
 
