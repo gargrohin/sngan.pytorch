@@ -68,7 +68,7 @@ def main():
 
     multiD = []
     multiD_opt = []
-    n_dis = 4
+    n_dis = 1
     for i in range(n_dis):
         dis_net = eval('models.'+args.model+'.Discriminator')(args=args).cuda()
         dis_net.apply(weights_init)
@@ -146,7 +146,7 @@ def main():
         'valid_global_steps': start_epoch // args.val_freq,
     }
 
-    experiment = comet_ml.Experiment(project_name="wgangp-multi")
+    experiment = comet_ml.Experiment(project_name="wgan-cifar")
     exp_parameters = {
         "data": "cifar10_32x32",
         "model": "wgangp-cifar10",
