@@ -297,7 +297,15 @@ def train_wgan(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen_
         alpha = Variable(torch.rand(x_real.size()))
         alpha = alpha.cuda()
         x_hat = alpha*x_fake + (1-alpha)*x_real
-        d_x_hat = multiD[0](x_hat)
+        flag = True
+        for i in range(n_dis):
+            if flag:
+                d_x_hat = multiD[i](x_hat)
+                flag = False
+            else:
+                d_x_hat = torch.cat((d_x_hat, multiD[i](x_hat)), dim = 1)
+        d_x_hat = torch.sum(mask*d_x_hat, dim=1)
+        # d_x_hat = multiD[0](x_hat)
         gradients = torch.autograd.grad(outputs=d_x_hat, inputs=x_hat,
                           grad_outputs=torch.ones(d_x_hat.size()).cuda(),
                           create_graph=True, retain_graph=True, only_inputs=True)[0]

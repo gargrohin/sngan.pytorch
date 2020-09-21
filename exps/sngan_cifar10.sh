@@ -12,7 +12,7 @@ python train.py \
 --gf_dim 256 \
 --df_dim 128 \
 --g_spectral_norm False \
---d_spectral_norm True \
+--d_spectral_norm False \
 --g_lr 0.0002 \
 --d_lr 0.0002 \
 --beta1 0.0 \
@@ -20,4 +20,4 @@ python train.py \
 --init_type xavier_uniform \
 --n_critic 5 \
 --val_freq 20 \
---exp_name wgangp-sngan
+--exp_name wgangp-multi
