@@ -20,4 +20,4 @@ python train.py \
 --init_type xavier_uniform \
 --n_critic 5 \
 --val_freq 20 \
---exp_name wgan-cifar10
+--exp_name wgangp-multi
