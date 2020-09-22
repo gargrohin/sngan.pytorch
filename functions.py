@@ -292,42 +292,42 @@ def train_wgan(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen_
                 mask[i][ind[i]] = 1.0
                 mask2[i][ind[i]] = 1.0
         
-        # for i in range(mask.size()[0], mask2.size()[0]):
-        #     mask2[i][np.random.randint(0,n_dis)] = 1.0
-        # alpha = Variable(torch.rand(x_real.size()))
-        # alpha = alpha.cuda()
-        # x_hat = alpha*x_fake + (1-alpha)*x_real
-        # flag = True
-        # for i in range(n_dis):
-        #     if flag:
-        #         d_x_hat = multiD[i](x_hat)
-        #         flag = False
-        #     else:
-        #         d_x_hat = torch.cat((d_x_hat, multiD[i](x_hat)), dim = 1)
-        # d_x_hat = torch.sum(mask*d_x_hat, dim=1)
-        # # d_x_hat = multiD[0](x_hat)
-        # gradients = torch.autograd.grad(outputs=d_x_hat, inputs=x_hat,
-        #                   grad_outputs=torch.ones(d_x_hat.size()).cuda(),
-        #                   create_graph=True, retain_graph=True, only_inputs=True)[0]
+        for i in range(mask.size()[0], mask2.size()[0]):
+            mask2[i][np.random.randint(0,n_dis)] = 1.0
+        alpha = Variable(torch.rand(x_real.size()))
+        alpha = alpha.cuda()
+        x_hat = alpha*x_fake + (1-alpha)*x_real
+        flag = True
+        for i in range(n_dis):
+            if flag:
+                d_x_hat = multiD[i](x_hat)
+                flag = False
+            else:
+                d_x_hat = torch.cat((d_x_hat, multiD[i](x_hat)), dim = 1)
+        d_x_hat = torch.sum(mask*d_x_hat, dim=1)
+        # d_x_hat = multiD[0](x_hat)
+        gradients = torch.autograd.grad(outputs=d_x_hat, inputs=x_hat,
+                          grad_outputs=torch.ones(d_x_hat.size()).cuda(),
+                          create_graph=True, retain_graph=True, only_inputs=True)[0]
 
-        # gradients = gradients.reshape(imgs.shape[0], -1)
-        # gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean() 
-        # LAMBDA=10
-        # loss = LAMBDA*gradient_penalty
+        gradients = gradients.reshape(imgs.shape[0], -1)
+        gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean() 
+        LAMBDA=10
+        loss = LAMBDA*gradient_penalty
         D_fake_output = torch.sum(mask2*D_fake, dim = 1)
         D_real_output = torch.sum(mask*D_real, dim = 1)
         
         # cal loss
         d_loss = -(torch.mean(D_real_output) - torch.mean(D_fake_output))
-        # d_loss += loss
+        d_loss += loss
         # d_loss = criterion(real_validity, y_real) + criterion(fake_validity, y_fake)
         d_loss.backward()
         for i in range(n_dis):
             multiD_opt[i].step()
         
-        for i in range(n_dis):
-            for p in multiD[i].parameters():
-                p.data.clamp_(-0.01, 0.01)
+        # for i in range(n_dis):
+        #     for p in multiD[i].parameters():
+        #         p.data.clamp_(-0.01, 0.01)
 
         writer.add_scalar('d_loss', d_loss.item(), global_steps)
 
