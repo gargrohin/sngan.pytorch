@@ -149,7 +149,7 @@ def main():
     experiment = comet_ml.Experiment(project_name="wgan-cifar")
     exp_parameters = {
         "data": "cifar10_32x32",
-        "model": "wgangp-cifar10",
+        "model": "wgan-cifar10",
         "opt_gen": "Adam_lr_0.0002, (0.0,0.999)",
         "opt_dis": "Adam_lr_0.0002, (0.0,0.999)",
         "alpha": "0.5,2",
