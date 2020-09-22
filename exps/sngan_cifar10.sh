@@ -19,5 +19,5 @@ python train.py \
 --beta2 0.9 \
 --init_type xavier_uniform \
 --n_critic 5 \
---val_freq 20 \
---exp_name wgangp-multi
+--val_freq 10 \
+--exp_name multi-new1
