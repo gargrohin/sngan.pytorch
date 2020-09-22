@@ -146,19 +146,19 @@ def main():
         'valid_global_steps': start_epoch // args.val_freq,
     }
 
-    experiment = comet_ml.Experiment(project_name="multi-new1")
+    experiment = comet_ml.Experiment(project_name="multi-sngan")
     exp_parameters = {
         "data": "cifar10_32x32",
         "model": "multi-cifar10",
         "opt_gen": "Adam_lr_0.0002, (0.0,0.999)",
         "opt_dis": "Adam_lr_0.0002, (0.0,0.999)",
-        "alpha": "0.5,2",
+        "alpha": "0.0,2",
         "freq": 10,
         "gp lamba": 10,
-        "rand_thresh": 0.6,
+        "rand_thresh": 0.8,
         "n_dis": n_dis,
         "z_dim": 128,
-        "n_critic": 5,
+        "n_critic": 7,
         "normalize": "mean,std 0.5",
         "dis_landscape": 0,
         "try": 0,
