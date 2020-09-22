@@ -446,7 +446,7 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
                 flag = False
             else:
                 D_fake = torch.cat((D_fake, multiD[i](x_fake)), dim = 1)
-                D_real = torch.cat((D_real, multiD[i](x_real)), dim = 1)
+                D_real = torch.cat((D_real, multiD[i](x_real_new)), dim = 1)
         
         ind = torch.argmin(D_fake, dim = 1)
         mask = torch.zeros((x_real.size()[0]*2, n_dis)).cuda()
