@@ -465,7 +465,7 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
         for i in range(mask2.size()[0], mask.size()[0]):
             id = np.random.randint(0,n_dis)
             if id != ind[i - mask2.size()[0]]:
-                mask2[i][id] = 1.0
+                mask[i][id] = 1.0
         
         D_fake_output = torch.sum(mask2*D_fake, dim = 1)
         D_real_output = torch.sum(mask*D_real, dim = 1)
