@@ -140,11 +140,11 @@ def main():
         logger = create_logger(args.path_helper['log_path'])
 
     logger.info(args)
-    # writer_dict = {
-    #     'writer': SummaryWriter(args.path_helper['log_path']),
-    #     'train_global_steps': start_epoch * len(train_loader),
-    #     'valid_global_steps': start_epoch // args.val_freq,
-    # }
+    writer_dict = {
+        'writer': SummaryWriter(args.path_helper['log_path']),
+        'train_global_steps': start_epoch * len(train_loader),
+        'valid_global_steps': start_epoch // args.val_freq,
+    }
 
     experiment = comet_ml.Experiment(project_name="multi-sngan-validate")
     exp_parameters = {
