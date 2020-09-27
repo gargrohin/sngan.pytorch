@@ -9,9 +9,20 @@ from tqdm import tqdm
 from copy import deepcopy
 import logging
 from torch.autograd import Variable
+import cfg
+import models
+import datasets
+from functions import train_multi, validate, LinearLrDecay, load_params, copy_params
+from utils.utils import set_log_dir, save_checkpoint, create_logger
+from utils.inception_score import _init_inception
+from utils.fid_score import create_inception_graph, check_or_download_inception
 
 from utils.inception_score import get_inception_score
 from utils.fid_score import calculate_fid_given_paths
+
+_init_inception()
+inception_path = check_or_download_inception(None)
+create_inception_graph(inception_path)
 
 fid_buffer_dir = os.path.join('../.', 'fid_buffer_biggan')
 os.makedirs(fid_buffer_dir)
