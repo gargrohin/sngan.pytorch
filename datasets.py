@@ -105,7 +105,7 @@ class ImageDataset(object):
                 transforms.ToTensor(),
                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
             ])
-            Dt = Cub2011()
+            Dt = Cub2011
         else:
             raise NotImplementedError('Unknown dataset: {}'.format(args.dataset))
 
