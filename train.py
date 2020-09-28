@@ -168,7 +168,7 @@ def main():
     output = '.temp_cub.png'
     experiment.log_parameters(exp_parameters)
 
-    experiment = None
+    # experiment = None
 
     # train loop
     lr_schedulers = None#(gen_scheduler, dis_scheduler1) if args.lr_decay else None
