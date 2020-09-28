@@ -68,7 +68,7 @@ def main():
 
     multiD = []
     multiD_opt = []
-    n_dis = 4
+    n_dis = 1
     for i in range(n_dis):
         dis_net = eval('models.'+args.model+'.Discriminator')(args=args).cuda()
         dis_net.apply(weights_init)
@@ -93,13 +93,14 @@ def main():
     train_loader = dataset.train
 
     # fid stat
-    if args.dataset.lower() == 'cifar10':
-        fid_stat = 'fid_stat/fid_stats_cifar10_train.npz'
-    elif args.dataset.lower() == 'stl10':
-       fid_stat = 'fid_stat/stl10_train_unlabeled_fid_stats_48.npz'
-    else:
-       raise NotImplementedError(f'no fid stat for {args.dataset.lower()}')
-    assert os.path.exists(fid_stat)
+    # if args.dataset.lower() == 'cifar10':
+    #     fid_stat = 'fid_stat/fid_stats_cifar10_train.npz'
+    # elif args.dataset.lower() == 'stl10':
+    #    fid_stat = 'fid_stat/stl10_train_unlabeled_fid_stats_48.npz'
+    # else:
+    #    raise NotImplementedError(f'no fid stat for {args.dataset.lower()}')
+    # assert os.path.exists(fid_stat)
+    fid_stat = None
 
     # epoch number for dis_net
     args.max_epoch = args.max_epoch * args.n_critic
@@ -146,26 +147,28 @@ def main():
         'valid_global_steps': start_epoch // args.val_freq,
     }
 
-    experiment = comet_ml.Experiment(project_name="multi-sngan")
-    exp_parameters = {
-        "data": "cifar10_32x32",
-        "model": "multi-cifar10",
-        "opt_gen": "Adam_lr_0.0002, (0.0,0.999)",
-        "opt_dis": "Adam_lr_0.0001, (0.0,0.999)",
-        "alpha": "0.0,2",
-        "freq": 20,
-        "gp lamba": 10,
-        "rand_thresh": 0.7,
-        "n_dis": n_dis,
-        "z_dim": 128,
-        "n_critic": 7,
-        "normalize": "mean,std 0.5",
-        "dis_landscape": 0,
-        "try": 0,
-        "model_save": args.path_helper['log_path']
-    }
+    # experiment = comet_ml.Experiment(project_name="multi-sngan")
+    # exp_parameters = {
+    #     "data": "cifar10_32x32",
+    #     "model": "multi-cifar10",
+    #     "opt_gen": "Adam_lr_0.0002, (0.0,0.999)",
+    #     "opt_dis": "Adam_lr_0.0001, (0.0,0.999)",
+    #     "alpha": "0.0,2",
+    #     "freq": 20,
+    #     "gp lamba": 10,
+    #     "rand_thresh": 0.7,
+    #     "n_dis": n_dis,
+    #     "z_dim": 128,
+    #     "n_critic": 7,
+    #     "normalize": "mean,std 0.5",
+    #     "dis_landscape": 0,
+    #     "try": 0,
+    #     "model_save": args.path_helper['log_path']
+    # }
     output = '.temp_multi.png'
-    experiment.log_parameters(exp_parameters)
+    # experiment.log_parameters(exp_parameters)
+
+    experiment = None
 
     # train loop
     lr_schedulers = None#(gen_scheduler, dis_scheduler1) if args.lr_decay else None
@@ -182,9 +185,9 @@ def main():
             logger.info(f'Inception score: {inception_score}, FID score: {fid_score} || @ epoch {epoch}.')
             
             vutils.save_image(sample_imgs, output ,normalize=True)
-            experiment.log_image(output, name = "output_" + str(epoch))
-            experiment.log_metric("IS", inception_score)
-            experiment.log_metric("FID", fid_score)
+            # experiment.log_image(output, name = "output_" + str(epoch))
+            # experiment.log_metric("IS", inception_score)
+            # experiment.log_metric("FID", fid_score)
 
             load_params(gen_net, backup_param)
             if fid_score < best_fid:

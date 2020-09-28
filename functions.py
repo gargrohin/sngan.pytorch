@@ -645,8 +645,8 @@ def validate(args, fixed_z, fid_stat, gen_net: nn.Module, writer_dict):
     img_grid = make_grid(sample_imgs, nrow=8, normalize=True, scale_each=True)
 
     # get fid and inception score
-    fid_buffer_dir = os.path.join(args.path_helper['sample_path'], 'fid_buffer')
-    os.makedirs(fid_buffer_dir)
+    # fid_buffer_dir = os.path.join(args.path_helper['sample_path'], 'fid_buffer')
+    # os.makedirs(fid_buffer_dir)
 
     eval_iter = args.num_eval_imgs // args.eval_batch_size
     img_list = list()
@@ -656,9 +656,9 @@ def validate(args, fixed_z, fid_stat, gen_net: nn.Module, writer_dict):
 
             # Generate a batch of images
             gen_imgs = gen_net(z).mul_(127.5).add_(127.5).clamp_(0.0, 255.0).permute(0, 2, 3, 1).to('cpu', torch.uint8).numpy()
-            for img_idx, img in enumerate(gen_imgs):
-                file_name = os.path.join(fid_buffer_dir, f'iter{iter_idx}_b{img_idx}.png')
-                imsave(file_name, img)
+            # for img_idx, img in enumerate(gen_imgs):
+            #     file_name = os.path.join(fid_buffer_dir, f'iter{iter_idx}_b{img_idx}.png')
+            #     imsave(file_name, img)
             img_list.extend(list(gen_imgs))
 
     # get inception score
@@ -668,15 +668,16 @@ def validate(args, fixed_z, fid_stat, gen_net: nn.Module, writer_dict):
     mean, std = get_inception_score(img_list)
 
     # get fid score
-    logger.info('=> calculate fid score')
-    fid_score = calculate_fid_given_paths([fid_buffer_dir, fid_stat], inception_path=None)
+    # logger.info('=> calculate fid score')
+    # fid_score = calculate_fid_given_paths([fid_buffer_dir, fid_stat], inception_path=None)
+    fid_score = 0.0
 
-    os.system('rm -r {}'.format(fid_buffer_dir))
+    # os.system('rm -r {}'.format(fid_buffer_dir))
 
     writer.add_image('sampled_images', img_grid, global_steps)
     writer.add_scalar('Inception_score/mean', mean, global_steps)
     writer.add_scalar('Inception_score/std', std, global_steps)
-    writer.add_scalar('FID_score', fid_score, global_steps)
+    # writer.add_scalar('FID_score', fid_score, global_steps)
 
     writer_dict['valid_global_steps'] = global_steps + 1
 
