@@ -38,10 +38,10 @@ class Cub2011(Dataset):
         data = images.merge(image_class_labels, on='img_id')
         self.data = data.merge(train_test_split, on='img_id')
 
-        if self.train:
-            self.data = self.data[self.data.is_training_img == 1]
-        else:
-            self.data = self.data[self.data.is_training_img == 0]
+        # if self.train:
+        #     self.data = self.data[self.data.is_training_img == 1]
+        # else:
+        #     self.data = self.data[self.data.is_training_img == 0]
 
     def _check_integrity(self):
         try:
