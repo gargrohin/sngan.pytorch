@@ -112,6 +112,7 @@ def main():
     gen_avg_param = copy_params(gen_net)
     start_epoch = 0
     best_fid = 1e4
+    best_incept = 0
 
     # set writer
     if args.load_path:
@@ -190,8 +191,8 @@ def main():
             # experiment.log_metric("FID", fid_score)
 
             load_params(gen_net, backup_param)
-            if fid_score < best_fid:
-                best_fid = fid_score
+            if inception_score > best_incept:
+                best_incept = inception_score
                 is_best = True
             else:
                 is_best = False
