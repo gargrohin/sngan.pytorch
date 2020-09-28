@@ -468,8 +468,8 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
         D_fake_output = torch.sum(mask2*D_fake, dim = 1)
         D_real_output = torch.sum(mask*D_real, dim = 1)
 
-        cos = torch.nn.CosineSimilarity()
-        dot = cos(D_fake[0], D_fake[1])
+        #cos = torch.nn.CosineSimilarity()
+        #dot = cos(D_fake[0], D_fake[1])
         
         # cal loss
         d_loss = torch.mean(nn.ReLU(inplace=True)(1.0 - D_real_output)) + \

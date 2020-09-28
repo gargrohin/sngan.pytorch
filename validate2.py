@@ -24,8 +24,8 @@ _init_inception()
 inception_path = check_or_download_inception(None)
 create_inception_graph(inception_path)
 
-fid_buffer_dir = os.path.join('../.', 'fid_buffer_biggan')
-os.makedirs(fid_buffer_dir)
+fid_buffer_dir = 'logs/multiD_cifar10_2020_09_08_07_03_25/Samples/fid_buffer/'
+#os.makedirs(fid_buffer_dir)
 
 fname = '.samples.npz'
 print('loading %s ...'%fname)

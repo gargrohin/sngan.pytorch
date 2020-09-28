@@ -84,6 +84,7 @@ def get_activations(images, sess, batch_size=50, verbose=False):
     """
     inception_layer = _get_inception_layer(sess)
     d0 = images.shape[0]
+    print(images.shape)
     if batch_size > d0:
         print("warning: batch size is bigger than the data size. setting batch size to data size")
         batch_size = d0

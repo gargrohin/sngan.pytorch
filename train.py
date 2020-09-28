@@ -68,7 +68,7 @@ def main():
 
     multiD = []
     multiD_opt = []
-    n_dis = 2
+    n_dis = 4
     for i in range(n_dis):
         dis_net = eval('models.'+args.model+'.Discriminator')(args=args).cuda()
         dis_net.apply(weights_init)
@@ -151,14 +151,14 @@ def main():
         "data": "cifar10_32x32",
         "model": "multi-cifar10",
         "opt_gen": "Adam_lr_0.0002, (0.0,0.999)",
-        "opt_dis": "Adam_lr_0.0002, (0.0,0.999)",
+        "opt_dis": "Adam_lr_0.0001, (0.0,0.999)",
         "alpha": "0.0,2",
         "freq": 20,
         "gp lamba": 10,
         "rand_thresh": 0.7,
         "n_dis": n_dis,
         "z_dim": 128,
-        "n_critic": 8,
+        "n_critic": 7,
         "normalize": "mean,std 0.5",
         "dis_landscape": 0,
         "try": 0,
@@ -195,20 +195,21 @@ def main():
         else:
             is_best = False
 
-        avg_gen_net = deepcopy(gen_net)
-        load_params(avg_gen_net, gen_avg_param)
-        save_checkpoint({
-            'epoch': epoch + 1,
-            'model': args.model,
-            'gen_state_dict': gen_net.state_dict(),
-            'dis1_state_dict': dis_net1.state_dict(),
-            'avg_gen_state_dict': avg_gen_net.state_dict(),
-            'gen_optimizer': gen_optimizer.state_dict(),
-            'dis_optimizer': dis_optimizer1.state_dict(),
-            'best_fid': best_fid,
-            'path_helper': args.path_helper
-        }, is_best, args.path_helper['ckpt_path'])
-        del avg_gen_net
+        if is_best:
+            avg_gen_net = deepcopy(gen_net)
+            load_params(avg_gen_net, gen_avg_param)
+            save_checkpoint({
+                'epoch': epoch + 1,
+                'model': args.model,
+                'gen_state_dict': gen_net.state_dict(),
+                'dis1_state_dict': dis_net1.state_dict(),
+                'avg_gen_state_dict': avg_gen_net.state_dict(),
+                'gen_optimizer': gen_optimizer.state_dict(),
+                'dis_optimizer': dis_optimizer1.state_dict(),
+                'best_fid': best_fid,
+                'path_helper': args.path_helper
+            }, is_best, args.path_helper['ckpt_path'])
+            del avg_gen_net
 
 
 if __name__ == '__main__':

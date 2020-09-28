@@ -20,7 +20,7 @@ softmax = None
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
-config.gpu_options.per_process_gpu_memory_fraction = 0.333
+#config.gpu_options.per_process_gpu_memory_fraction = 0.333
 
 # Call this function with list of images. Each of elements should be a
 # numpy array with values ranging from 0 to 255.
