@@ -68,7 +68,7 @@ def main():
 
     multiD = []
     multiD_opt = []
-    n_dis = 1
+    n_dis = 2
     for i in range(n_dis):
         dis_net = eval('models.'+args.model+'.Discriminator')(args=args).cuda()
         dis_net.apply(weights_init)
