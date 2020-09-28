@@ -7,7 +7,7 @@ python train.py \
 --dataset cub \
 --img_size 32 \
 --max_iter 100000 \
---model sngan_cifar \
+--model sngan_cifar10 \
 --latent_dim 128 \
 --gf_dim 256 \
 --df_dim 128 \
