@@ -20,9 +20,9 @@ from utils.fid_score import create_inception_graph, check_or_download_inception
 from utils.inception_score import get_inception_score
 from utils.fid_score import calculate_fid_given_paths
 
-# _init_inception()
-# inception_path = check_or_download_inception(None)
-# create_inception_graph(inception_path)
+_init_inception()
+inception_path = check_or_download_inception(None)
+create_inception_graph(inception_path)
 
 fid_buffer_dir = 'data/CUB_200_2011/all_images/'
 #os.makedirs(fid_buffer_dir)
