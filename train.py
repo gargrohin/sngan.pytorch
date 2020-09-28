@@ -68,7 +68,7 @@ def main():
 
     multiD = []
     multiD_opt = []
-    n_dis = 2
+    n_dis = 4
     for i in range(n_dis):
         dis_net = eval('models.'+args.model+'.Discriminator')(args=args).cuda()
         dis_net.apply(weights_init)
@@ -153,14 +153,14 @@ def main():
         "data": "cub_32x32",
         "model": "sngan-cifar10",
         "opt_gen": "Adam_lr_0.0002, (0.0,0.999)",
-        "opt_dis": "Adam_lr_0.0001, (0.0,0.999)",
+        "opt_dis": "Adam_lr_0.0002, (0.0,0.999)",
         "alpha": "0.0,2",
         "freq": 20,
         # "gp lamba": 10,
         "rand_thresh": 0.7,
         "n_dis": n_dis,
         "z_dim": 128,
-        "n_critic": 5,
+        "n_critic": 7,
         "normalize": "mean,std 0.5",
         "dis_landscape": 0,
         "try": 0,
