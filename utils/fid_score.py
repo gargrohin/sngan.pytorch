@@ -287,6 +287,11 @@ def check_or_download_inception(inception_path):
 
 
 def _handle_path(path, sess, low_profile=False):
+    if 'TF_pool' in path:
+        f = np.load(path)
+        m , s = f['pool_mean'][:], f['pool_var'][:]
+        f.close()
+        return m, s
     if path.endswith('.npz'):
         f = np.load(path)
         m, s = f['mu'][:], f['sigma'][:]

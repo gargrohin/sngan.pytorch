@@ -20,19 +20,19 @@ from utils.fid_score import create_inception_graph, check_or_download_inception
 from utils.inception_score import get_inception_score
 from utils.fid_score import calculate_fid_given_paths
 
-_init_inception()
-inception_path = check_or_download_inception(None)
-create_inception_graph(inception_path)
+# _init_inception()
+# inception_path = check_or_download_inception(None)
+# create_inception_graph(inception_path)
 
-fid_buffer_dir = 'logs/multiD_cifar10_2020_09_08_07_03_25/Samples/fid_buffer/'
+fid_buffer_dir = '../TF_pool.npz'
 #os.makedirs(fid_buffer_dir)
 
-fname = '.samples.npz'
-print('loading %s ...'%fname)
-ims = np.load(fname)['x']
-ims = list(ims.swapaxes(1,2).swapaxes(2,3))
-mean, std = get_inception_score(ims)
-print(mean,std)
+# fname = '.samples.npz'
+# print('loading %s ...'%fname)
+# ims = np.load(fname)['x']
+# ims = list(ims.swapaxes(1,2).swapaxes(2,3))
+# mean, std = get_inception_score(ims)
+# print(mean,std)
 fid_stat = 'fid_stat/fid_stats_cifar10_train.npz'
 fid_score = calculate_fid_given_paths([fid_buffer_dir, fid_stat], inception_path=None)
 print(fid_score)
