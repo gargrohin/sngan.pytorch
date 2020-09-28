@@ -322,10 +322,12 @@ def calculate_fid_given_paths(paths, inception_path, low_profile=False):
     with tf.Session(config=config) as sess:
         sess.run(tf.global_variables_initializer())
         m1, s1 = _handle_path(paths[0], sess, low_profile=low_profile)
-        m2, s2 = _handle_path(paths[1], sess, low_profile=low_profile)
-        fid_value = calculate_frechet_distance(m1, s1, m2, s2)
+        # m2, s2 = _handle_path(paths[1], sess, low_profile=low_profile)
+        # fid_value = calculate_frechet_distance(m1, s1, m2, s2)
     sess.close()
     #tf.reset_default_graph()
-    del m1, s1, m2, s2
+    np.savez('fid_stats_cub.npz', **{'pool_mean': m1, 'pool_var': s1})
+    # del m1, s1, m2, s2
+    del m1, s1
 
-    return fid_value
+    return 0

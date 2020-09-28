@@ -24,7 +24,7 @@ from utils.fid_score import calculate_fid_given_paths
 # inception_path = check_or_download_inception(None)
 # create_inception_graph(inception_path)
 
-fid_buffer_dir = '../TF_pool.npz'
+fid_buffer_dir = 'data/CUB_200_2011/all_images/'
 #os.makedirs(fid_buffer_dir)
 
 # fname = '.samples.npz'
