@@ -1,7 +1,7 @@
 import torch.nn as nn
 # from .gen_resblock import GenBlock
 
-
+#comment
 class Generator(nn.Module):
     def __init__(self, args, ch = 512, bw=4):
         super(Generator, self).__init__()
