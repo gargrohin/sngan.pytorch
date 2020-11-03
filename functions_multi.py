@@ -24,7 +24,7 @@ from utils.fid_score import calculate_fid_given_paths
 logger = logging.getLogger(__name__)
 
 def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen_avg_param, train_loader, epoch,
-          writer_dict, schedulers=None, experiment=None):
+          writer_dict, alpha_m, t, check_ep, alpha, schedulers=None, experiment=None):
     writer = writer_dict['writer']
     gen_step = 0
 
@@ -46,11 +46,19 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
             nn.init.constant_(m.bias.data, 0.0)
 
     for imgs,_ in train_loader:
-        exemplar = imgs[:16].type(torch.cuda.FloatTensor)
+        exemplar = imgs[:15].type(torch.cuda.FloatTensor)
         break
     
     addno = False
-    if epoch > -1 and epoch % 10 == 0:
+    # check_ep = 10
+    
+    # check_ep = int(check_ep*t)
+    if n_dis == 1:
+        check_ep = 5
+
+
+    if epoch > 1 and epoch % check_ep == 0:
+        check_ep = int(check_ep*t)
         exemplar_flag = True
         with torch.no_grad():
             for dis_index in range(n_dis):
@@ -60,35 +68,37 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
                 else:
                     exemplar_res = torch.cat((multiD[dis_index](exemplar).unsqueeze(0), exemplar_res), dim=0)
         print(exemplar_res.size())
-        alpha = [0.5, 2]
+        alpha = 1.5
+        if n_dis > 2:
+            alpha = alpha*alpha_m
         print('\n',exemplar_res, torch.mean(exemplar_res, dim = 1))
         exemplar_max,_ = torch.max(exemplar_res, dim = 1)
         exemplar_min,_ = torch.min(exemplar_res, dim = 1)
         print('\n',exemplar_min)
-        for i in range(n_dis):
-            if exemplar_min[i].item() > alpha[0]*torch.mean(exemplar_res[i]).item():
-                addno = True
-                print(exemplar_min[i].item(), torch.mean(exemplar_res[i]).item())
-                if n_dis > 3:
-                    addno = False
-                    "\nAdd True but N_dis > 4\n"
-                    break
-                break
+        # for i in range(n_dis):
+        #     if exemplar_min[i].item() > alpha[0]*torch.mean(exemplar_res[i]).item():
+        #         addno = True
+        #         print(exemplar_min[i].item(), torch.mean(exemplar_res[i]).item())
+        #         if n_dis > 3:
+        #             addno = False
+        #             "\nAdd True but N_dis > 4\n"
+        #             break
+        #         break
         for i in range(n_dis):
             if addno:
                 break
-            if exemplar_max[i].item() > alpha[1]*torch.mean(exemplar_res[i]).item():
+            if exemplar_max[i].item() > alpha*torch.mean(exemplar_res[i]).item():
                 addno = True
                 print(exemplar_min[i].item(), torch.mean(exemplar_res[i]).item())
-                if n_dis > 3:
-                    addno = False
-                    "\nAdd True but N_dis > 4\n"
-                    break
+                # if n_dis > 3:
+                #     addno = False
+                #     "\nAdd True but N_dis > 4\n"
+                #     break
                 break
         
         
         if addno:
-            print('\n adding D \n')
+            # print('\n adding D \n')
             addno = False
             d_new = eval('models.'+args.model+'.Discriminator')(args=args).cuda()
             d_new.apply(weights_init)
@@ -96,7 +106,7 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
             multiD_opt.append(torch.optim.Adam(filter(lambda p: p.requires_grad, multiD[n_dis].parameters()),
                                 args.d_lr, (args.beta1, args.beta2)))
             n_dis +=1
-        print('\nn_dis: ', n_dis)
+        # print('\nn_dis: ', n_dis)
 
             # dcopy = deepcopy(multiD[n_dis-1]).cpu()
             # sdict = dcopy.state_dict()
@@ -255,7 +265,7 @@ def train_multi(args, gen_net: nn.Module, multiD, gen_optimizer, multiD_opt, gen
                 experiment.log_metric("dis_loss", d_loss.item())
 
         writer_dict['train_global_steps'] = global_steps + 1
-    return multiD, multiD_opt
+    return multiD, multiD_opt, check_ep, alpha
 
 def validate(args, fixed_z, fid_stat, gen_net: nn.Module, writer_dict):
     writer = writer_dict['writer']
