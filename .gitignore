@@ -4,3 +4,4 @@
 /fid_stat/*
 /logs/*
 */__pycache__/*
+*.npz
