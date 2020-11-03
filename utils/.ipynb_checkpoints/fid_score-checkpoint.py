@@ -26,7 +26,6 @@ from imageio import imread
 from scipy import linalg
 import pathlib
 import warnings
-import cv2
 
 
 class InvalidFIDException(Exception):
@@ -203,14 +202,7 @@ def load_image_batch(files):
     Returns:
     -- A numpy array of dimensions (num_images,hi, wi, 3) representing the image pixel values.
     """
-    # return np.array([imread(str(fn)).astype(np.float32) for fn in files])
-    imgs = []
-    for fn in files:
-        img = cv2.imread(str(fn))
-        img = cv2.resize(img, (128,128))
-        imgs.append(img.astype(np.float32))
-    imgs = np.array(imgs)
-    return imgs
+    return np.array([imread(str(fn)).astype(np.float32) for fn in files])
 
 
 def get_activations_from_files(files, sess, batch_size=50, verbose=False):
